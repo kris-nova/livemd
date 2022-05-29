@@ -36,9 +36,10 @@ type Note struct {
 	TeamPath        string `json:"teamPath,omitempty"`
 	ReadPermission  string `json:"readPermission,omitempty"`
 	WritePermission string `json:"writePermission,omitempty"`
+	Content         string `json:"content,omitempty"`
 }
 
-func (c *Client) Notes() ([]*Note, error) {
+func (c *Client) GetNotes() ([]*Note, error) {
 	resp, err := c.GET("notes")
 	if err != nil {
 		return nil, err
@@ -47,7 +48,7 @@ func (c *Client) Notes() ([]*Note, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to read body: %v", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
 	}
 	var v []*Note
@@ -58,7 +59,7 @@ func (c *Client) Notes() ([]*Note, error) {
 	return v, nil
 }
 
-func (c *Client) Note(id string) (*Note, error) {
+func (c *Client) GetNote(id string) (*Note, error) {
 	resp, err := c.GET(fmt.Sprintf("notes/%s", id))
 	if err != nil {
 		return nil, err
@@ -67,7 +68,7 @@ func (c *Client) Note(id string) (*Note, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to read body: %v", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
 	}
 	var v *Note
@@ -76,4 +77,40 @@ func (c *Client) Note(id string) (*Note, error) {
 		return nil, fmt.Errorf("unable to JSON unmarshal body: %v", err)
 	}
 	return v, nil
+}
+
+func (c *Client) CreateNote(note *Note) (*Note, error) {
+	payload, err := json.Marshal(note)
+	resp, err := c.POST("notes", payload)
+	if err != nil {
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read body: %v", err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
+	}
+	var v *Note
+	err = json.Unmarshal(data, &v)
+	if err != nil {
+		return nil, fmt.Errorf("unable to JSON unmarshal body: %v", err)
+	}
+	return v, nil
+}
+
+func (c *Client) DeleteNote(id string) error {
+	resp, err := c.DELETE(fmt.Sprintf("notes/%s", id))
+	if err != nil {
+		return err
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("unable to read body: %v", err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
+	}
+	return nil
 }

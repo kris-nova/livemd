@@ -17,6 +17,7 @@
 package hackmd
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 )
@@ -69,6 +70,27 @@ func (c *Client) GET(endpoint string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(BearerTokenHeaderKey, fmt.Sprintf(BearerTokenHeaderValueFormat, c.bearerToken))
+	return c.client.Do(req)
+}
+
+func (c *Client) POST(endpoint string, data []byte) (*http.Response, error) {
+	req, err := http.NewRequest("POST", fmt.Sprintf(c.endpointf, endpoint), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(BearerTokenHeaderKey, fmt.Sprintf(BearerTokenHeaderValueFormat, c.bearerToken))
+	return c.client.Do(req)
+}
+
+func (c *Client) DELETE(endpoint string) (*http.Response, error) {
+	req, err := http.NewRequest("DELETE", fmt.Sprintf(c.endpointf, endpoint), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(BearerTokenHeaderKey, fmt.Sprintf(BearerTokenHeaderValueFormat, c.bearerToken))
 	return c.client.Do(req)
 }
