@@ -21,6 +21,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/kris-nova/live/pkg/livemd"
+
 	"github.com/kris-nova/live"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -97,11 +99,36 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 							return nil
 						},
 					},
+					{
+						Name:        "status",
+						Usage:       "Show status of local file.",
+						UsageText:   "live stream status",
+						Description: "Use this command to overwrite remote.",
+						Flags:       GlobalFlags([]cli.Flag{}),
+						Action: func(c *cli.Context) error {
+
+							// Status always comes from local state
+							x, err := livemd.FromFile(DefaultFile)
+							if err != nil {
+								return fmt.Errorf("unable to open %s: %v", DefaultFile, err)
+							}
+							status := x.Status()
+							fmt.Print(status)
+							return nil
+						},
+					},
 				},
 				Flags: GlobalFlags([]cli.Flag{}),
 				Action: func(c *cli.Context) error {
-					fmt.Println(live.Banner())
-					cli.ShowSubcommandHelp(c)
+					title := c.Args().Get(0)
+					if title == "" {
+						fmt.Println(live.Banner())
+						cli.ShowSubcommandHelp(c)
+						return nil
+					}
+
+					// New with name
+					logrus.Infof("Creating New Stream \"%s\"", title)
 					return nil
 				},
 			},
@@ -114,7 +141,11 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 		},
 	}
 	Preloader()
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		logrus.Errorf("Runtime: %v", err)
+	}
+	logrus.Infof("Ok")
 }
 
 // Preloader will run for ALL commands, and is used
@@ -122,9 +153,9 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 func Preloader() {
 	/* Flag parsing */
 	if cfg.verbose {
-		logrus.SetLevel(logrus.InfoLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	} else {
-		logrus.SetLevel(logrus.WarnLevel)
+		logrus.SetLevel(logrus.InfoLevel)
 	}
 }
 

@@ -14,9 +14,11 @@
  *                                                                           *
 \*===========================================================================*/
 
-package pkg
+package livemd
 
-var (
-	//go:embed live.md
-	LiveMDTemplate string
-)
+type LiveMDStatus struct {
+}
+
+func (x *LiveMD) Status() *LiveMDStatus {
+	return &LiveMDStatus{}
+}
