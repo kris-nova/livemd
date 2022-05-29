@@ -51,6 +51,9 @@ func (c *Client) Me() (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to read body: %v", err)
 	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
+	}
 	v := User{}
 	err = json.Unmarshal(data, &v)
 	if err != nil {

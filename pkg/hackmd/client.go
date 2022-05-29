@@ -52,15 +52,25 @@ type Client struct {
 
 	// endpointf is the format string to build endpoints with
 	endpointf string
+
+	client http.Client
 }
 
 func New(token string) *Client {
 	return &Client{
 		bearerToken: token,
 		endpointf:   EndpointV1Format,
+		client:      http.Client{},
 	}
 }
 
 func (c *Client) GET(endpoint string) (*http.Response, error) {
-	return http.Get(fmt.Sprintf(c.endpointf, endpoint))
+	req, err := http.NewRequest("GET", fmt.Sprintf(c.endpointf, endpoint), nil)
+	if err != nil {
+		return nil, err
+	}
+	header := http.Header{}
+	header.Set(BearerTokenHeaderKey, fmt.Sprintf(BearerTokenHeaderValueFormat, c.bearerToken))
+	req.Header = header
+	return c.client.Do(req)
 }
