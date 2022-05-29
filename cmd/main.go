@@ -129,7 +129,8 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 
 					// New with name
 					logrus.Infof("Creating New Stream \"%s\"", title)
-					return nil
+					x := livemd.New(title)
+					return x.Write(cfg.filename)
 				},
 			},
 		},
@@ -169,6 +170,7 @@ func GlobalFlags(c []cli.Flag) []cli.Flag {
 			Name:        "filename",
 			Aliases:     []string{"f"},
 			Destination: &cfg.filename,
+			Value:       DefaultFile,
 		},
 	}
 	for _, gf := range g {
