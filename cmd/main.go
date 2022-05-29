@@ -17,7 +17,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -32,6 +31,16 @@ var cfg = &AppOptions{}
 type AppOptions struct {
 	verbose bool
 }
+
+// # Edit ./live.md
+// live stream <title>    # Create a new live stream (hackmd)
+// live stream push       # Sync local changes to hackmd
+// live stream pull       # Overwrite local changes to hackmd
+//
+// # Update firebot with new hackmd URL (TODO Automate)
+// live twitch push       # Sync local file to twitch API
+// live twitch pull       # Overwrite local changes from twitch API
+// live twitch export     # Export twitch episode to YouTube
 
 func main() {
 	/* Change version to -V */
@@ -52,9 +61,9 @@ func main() {
 		},
 		Copyright: live.Copyright,
 		HelpName:  live.Copyright,
-		Usage:     "A go program.",
-		UsageText: `service <options> <flags> 
-A longer sentence, about how exactly to use this program`,
+		Usage:     "Collaborative Live Stream CLI Tool",
+		UsageText: `live <cmd> <options> 
+Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 		Commands: []*cli.Command{
 			&cli.Command{},
 		},
@@ -68,15 +77,6 @@ A longer sentence, about how exactly to use this program`,
 		EnableBashCompletion: true,
 		HideHelp:             false,
 		HideVersion:          false,
-		Before: func(c *cli.Context) error {
-			Preloader()
-			fmt.Fprintf(c.App.Writer, live.Banner())
-			return nil
-		},
-		After: func(c *cli.Context) error {
-			// Destruct
-			return nil
-		},
 		Action: func(c *cli.Context) error {
 
 			//
@@ -86,6 +86,7 @@ A longer sentence, about how exactly to use this program`,
 
 		},
 	}
+	Preloader()
 	app.Run(os.Args)
 }
 
