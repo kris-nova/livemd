@@ -145,7 +145,6 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 	if err != nil {
 		logrus.Errorf("Runtime: %v", err)
 	}
-	logrus.Infof("Ok")
 }
 
 // Preloader will run for ALL commands, and is used
