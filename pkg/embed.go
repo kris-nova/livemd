@@ -16,7 +16,9 @@
 
 package pkg
 
+import _ "embed"
+
 var (
 	//go:embed live.md
-	LiveMDTemplate string
+	MarkdownTemplate string
 )

@@ -17,10 +17,12 @@
 package livemd
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 
-	"github.com/sirupsen/logrus"
+	"github.com/kris-nova/live/pkg"
 
 	"github.com/kris-nova/live/pkg/hackmd"
 )
@@ -30,12 +32,15 @@ const (
 )
 
 type LiveMD struct {
-	Title string
+	Title     string
+	I         int
+	YouTubeID string
 }
 
 func New(title string) *LiveMD {
 	return &LiveMD{
 		Title: title,
+		I:     I(),
 	}
 }
 
@@ -71,6 +76,16 @@ func (x *LiveMD) Write(path string) error {
 }
 
 func (x *LiveMD) Markdown() ([]byte, error) {
-	logrus.Warnf("MARKDOWN NOT SUPPORTED")
-	return []byte(""), nil
+
+	tpl := template.New(x.Title)
+	tpl, err := tpl.Parse(pkg.MarkdownTemplate)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to parse template: %v", err)
+	}
+	buf := &bytes.Buffer{}
+	err = tpl.Execute(buf, x)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to execute template: %v", err)
+	}
+	return buf.Bytes(), nil
 }
