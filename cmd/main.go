@@ -17,19 +17,24 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/kris-nova/live"
-	"github.com/kris-nova/live/internal/service"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
+)
+
+const (
+	DefaultFile string = "live.md"
 )
 
 var cfg = &AppOptions{}
 
 type AppOptions struct {
-	verbose bool
+	verbose  bool
+	filename string
 }
 
 // # Edit ./live.md
@@ -50,40 +55,62 @@ func main() {
 		Usage:   "The version of the program.",
 	}
 	app := &cli.App{
-		Name:     live.Name,
+		Name:     "live",
 		Version:  live.Version,
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
-			&cli.Author{
+			{
 				Name:  live.AuthorName,
 				Email: live.AuthorEmail,
 			},
 		},
 		Copyright: live.Copyright,
-		HelpName:  live.Copyright,
-		Usage:     "Collaborative Live Stream CLI Tool",
+		HelpName:  live.Name,
+		Usage:     "Collaborative live stream CLI tool writte by Kris Nóva.",
 		UsageText: `live <cmd> <options> 
 Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 		Commands: []*cli.Command{
-			&cli.Command{},
-		},
-		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:        "verbose",
-				Aliases:     []string{"v"},
-				Destination: &cfg.verbose,
+			{
+				Name:        "stream",
+				Aliases:     []string{"s"},
+				Usage:       "Manage local live stream records.",
+				UsageText:   "live stream <title>",
+				Description: "Use this command to manage local records.",
+				Subcommands: []*cli.Command{
+					{
+						Name:        "push",
+						Usage:       "Push up the local live.md",
+						UsageText:   "live stream <title>",
+						Description: "Use this sync from remote.",
+						Flags:       GlobalFlags([]cli.Flag{}),
+						Action: func(c *cli.Context) error {
+							return nil
+						},
+					},
+					{
+						Name:        "pull",
+						Usage:       "Pull down to the local live.md",
+						UsageText:   "live stream <title>",
+						Description: "Use this command to overwrite remote.",
+						Flags:       GlobalFlags([]cli.Flag{}),
+						Action: func(c *cli.Context) error {
+							return nil
+						},
+					},
+				},
+				Flags: GlobalFlags([]cli.Flag{}),
+				Action: func(c *cli.Context) error {
+					fmt.Println(live.Banner())
+					cli.ShowSubcommandHelp(c)
+					return nil
+				},
 			},
 		},
-		EnableBashCompletion: true,
-		HideHelp:             false,
-		HideVersion:          false,
+		Flags: GlobalFlags([]cli.Flag{}),
 		Action: func(c *cli.Context) error {
-
-			//
-			novaObject := service.NewNova()
-			return novaObject.Run()
-			//
-
+			fmt.Println(live.Banner())
+			cli.ShowSubcommandHelp(c)
+			return nil
 		},
 	}
 	Preloader()
@@ -99,4 +126,23 @@ func Preloader() {
 	} else {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
+}
+
+func GlobalFlags(c []cli.Flag) []cli.Flag {
+	g := []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "verbose",
+			Aliases:     []string{"v"},
+			Destination: &cfg.verbose,
+		},
+		&cli.StringFlag{
+			Name:        "filename",
+			Aliases:     []string{"f"},
+			Destination: &cfg.filename,
+		},
+	}
+	for _, gf := range g {
+		c = append(c, gf)
+	}
+	return c
 }

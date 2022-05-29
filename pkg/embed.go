@@ -13,3 +13,14 @@
  *                       This machine kills fascists.                        *
  *                                                                           *
 \*===========================================================================*/
+
+package pkg
+
+var (
+
+	//go:embed src/main.go.tpl
+	FormatMainGo string
+
+	//go:embed src/library.go.tpl
+	FormatLibraryGo string
+)
