@@ -57,3 +57,23 @@ func (c *Client) Notes() ([]*Note, error) {
 	}
 	return v, nil
 }
+
+func (c *Client) Note(id string) (*Note, error) {
+	resp, err := c.GET(fmt.Sprintf("notes/%s", id))
+	if err != nil {
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read body: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
+	}
+	var v *Note
+	err = json.Unmarshal(data, &v)
+	if err != nil {
+		return nil, fmt.Errorf("unable to JSON unmarshal body: %v", err)
+	}
+	return v, nil
+}

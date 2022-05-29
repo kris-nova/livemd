@@ -57,3 +57,25 @@ func TestClientNotes(t *testing.T) {
 	}
 	t.Logf(string(data))
 }
+
+const (
+	WellKnownNoteID string = "FoFqCCmrRYiHr4jNm_ckwg"
+)
+
+func TestClientNote(t *testing.T) {
+	token := os.Getenv(EnvironmentalVariableToken)
+	if token == "" {
+		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableToken)
+		t.FailNow()
+	}
+	client := New(token)
+	v, err := client.Note(WellKnownNoteID)
+	if err != nil {
+		t.Errorf("Unable to get: %v", err)
+	}
+	data, err := json.Marshal(&v)
+	if err != nil {
+		t.Errorf("Unable json print: %v", err)
+	}
+	t.Logf(string(data))
+}
