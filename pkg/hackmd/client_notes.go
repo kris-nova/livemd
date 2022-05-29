@@ -18,42 +18,42 @@ package hackmd
 
 import (
 	"encoding/json"
-	"os"
-	"testing"
+	"fmt"
+	"io/ioutil"
 )
 
-func TestClient(t *testing.T) {
-	token := os.Getenv(EnvironmentalVariableToken)
-	if token == "" {
-		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableToken)
-		t.FailNow()
-	}
-	client := New(token)
-	user, err := client.Me()
-	if err != nil {
-		t.Errorf("Unable to get /me: %v", err)
-	}
-	data, err := json.Marshal(&user)
-	if err != nil {
-		t.Errorf("Unable json print /me: %v", err)
-	}
-	t.Logf(string(data))
+type LastChangeUser struct {
 }
 
-func TestClientNotes(t *testing.T) {
-	token := os.Getenv(EnvironmentalVariableToken)
-	if token == "" {
-		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableToken)
-		t.FailNow()
-	}
-	client := New(token)
-	v, err := client.Notes()
+type Note struct {
+	ID              string `json:"id,omitempty"`
+	Title           string `json:"title,omitempty"`
+	PublishType     string `json:"publishType,omitempty"`
+	Permalink       string `json:"permalink,omitempty"`
+	ShortID         string `json:"shortId,omitempty"`
+	LastChangeUser  User
+	UserPath        string `json:"userPath,omitempty"`
+	TeamPath        string `json:"teamPath,omitempty"`
+	ReadPermission  string `json:"readPermission,omitempty"`
+	WritePermission string `json:"writePermission,omitempty"`
+}
+
+func (c *Client) Notes() ([]*Note, error) {
+	resp, err := c.GET("notes")
 	if err != nil {
-		t.Errorf("Unable to get: %v", err)
+		return nil, err
 	}
-	data, err := json.Marshal(&v)
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		t.Errorf("Unable json print: %v", err)
+		return nil, fmt.Errorf("unable to read body: %v", err)
 	}
-	t.Logf(string(data))
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
+	}
+	var v []*Note
+	err = json.Unmarshal(data, &v)
+	if err != nil {
+		return nil, fmt.Errorf("unable to JSON unmarshal body: %v", err)
+	}
+	return v, nil
 }
