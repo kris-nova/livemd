@@ -35,6 +35,7 @@ type LiveMD struct {
 	Title     string
 	I         int
 	YouTubeID string
+	Data      []byte
 }
 
 func New(title string) *LiveMD {
@@ -62,9 +63,11 @@ func FromHackMD(client *hackmd.Client, id string) (*LiveMD, error) {
 }
 
 func FromRaw(data []byte) (*LiveMD, error) {
-	var livemd *LiveMD
-	return livemd, nil
-	// TODO Build from raw
+	x := &LiveMD{
+		Data: data,
+	}
+
+	return x, nil
 }
 
 func (x *LiveMD) Write(path string) error {
@@ -75,8 +78,11 @@ func (x *LiveMD) Write(path string) error {
 	return ioutil.WriteFile(path, md, LiveMDPerm)
 }
 
+// Markdown is a deterministic function based on the runtime configuration of *LiveMD
+// Markdown will template the live.md file in /pkg
+//
+// Markdown will NOT write from disk.
 func (x *LiveMD) Markdown() ([]byte, error) {
-
 	tpl := template.New(x.Title)
 	tpl, err := tpl.Parse(pkg.MarkdownTemplate)
 	if err != nil {

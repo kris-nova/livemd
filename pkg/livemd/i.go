@@ -17,6 +17,7 @@
 package livemd
 
 import (
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"strconv"
 )
@@ -30,15 +31,23 @@ const (
 func I() int {
 	bytes, err := ioutil.ReadFile(IFile)
 	if err != nil {
+		logrus.Infof("Index file reset: 0")
 		err = ioutil.WriteFile(IFile, []byte("0"), IPerm)
 		if err != nil {
+			logrus.Errorf(err.Error())
 			return -1
 		}
 		return I()
 	}
 	i, err := strconv.Atoi(string(bytes))
 	if err != nil {
-		return -1
+		logrus.Infof("Index file reset: 0")
+		err = ioutil.WriteFile(IFile, []byte("0"), IPerm)
+		if err != nil {
+			logrus.Errorf(err.Error())
+			return -1
+		}
+		return I()
 	}
 	return i
 }
@@ -48,6 +57,7 @@ func ISet(x int) int {
 	str := strconv.Itoa(x)
 	err := ioutil.WriteFile(IFile, []byte(str), IPerm)
 	if err != nil {
+		logrus.Errorf(err.Error())
 		return -1
 	}
 	return x
