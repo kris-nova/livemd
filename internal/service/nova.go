@@ -17,9 +17,10 @@
 package service
 
 import (
-	"github.com/kris-nova/go-nova/pkg/api"
-	"github.com/sirupsen/logrus"
 	"time"
+
+	"github.com/kris-nova/live/pkg/api"
+	"github.com/sirupsen/logrus"
 )
 
 // Compile check *Nova implements Runner interface
