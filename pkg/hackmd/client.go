@@ -69,8 +69,6 @@ func (c *Client) GET(endpoint string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	header := http.Header{}
-	header.Set(BearerTokenHeaderKey, fmt.Sprintf(BearerTokenHeaderValueFormat, c.bearerToken))
-	req.Header = header
+	req.Header.Set(BearerTokenHeaderKey, fmt.Sprintf(BearerTokenHeaderValueFormat, c.bearerToken))
 	return c.client.Do(req)
 }
