@@ -119,12 +119,7 @@ func (c *Client) UpdateNote(note *Note) (*Note, error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
 	}
-	var v *Note
-	err = json.Unmarshal(data, &v)
-	if err != nil {
-		return nil, fmt.Errorf("unable to JSON unmarshal body: %v", err)
-	}
-	return v, nil
+	return note, nil
 }
 
 func (c *Client) DeleteNote(id string) error {

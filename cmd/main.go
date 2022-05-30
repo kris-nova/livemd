@@ -134,6 +134,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					// New with name
 					logrus.Infof("Creating New Stream \"%s\"", title)
 					x := livemd.New(title)
+					x.HackMDID = cfg.hackmdID
 					err := x.Write(cfg.filename)
 					if err != nil {
 						return fmt.Errorf("unable to write local: %v", err)
@@ -146,6 +147,8 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					if note.ID == "" {
 						logrus.Infof("Creating new hackMD note: %s", note.Title)
 						note, err = client.CreateNote(note)
+						x.HackMDID = note.ID
+						defer x.Write(cfg.filename)
 					} else {
 						logrus.Infof("Updating hackMD note: %s", note.Title)
 						note, err = client.UpdateNote(note)
