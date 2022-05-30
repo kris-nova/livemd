@@ -73,9 +73,7 @@ const (
 )
 
 func FromRaw(data []byte) (*LiveMD, error) {
-	x := &LiveMD{
-		Data: data,
-	}
+	x := &LiveMD{}
 	rawBytes, err := findRaw(data)
 	if err != nil {
 		return nil, err
@@ -85,6 +83,7 @@ func FromRaw(data []byte) (*LiveMD, error) {
 		logrus.Warnf(string(rawBytes))
 		return nil, fmt.Errorf("unable to unmarshal raw: %v", err)
 	}
+	x.Data = data // Always overwrite the data at the end
 	return x, nil
 }
 
@@ -141,13 +140,9 @@ func (x *LiveMD) Markdown() ([]byte, error) {
 // HackMDNote will convert a *LiveMD to a *hackmd.Note with an optional ID (can be empty)
 func (x *LiveMD) HackMDNote(id string) (*hackmd.Note, error) {
 	note := &hackmd.Note{
-		ID:    id,
-		Title: x.Title,
+		ID:      id,
+		Title:   x.Title,
+		Content: string(x.Data),
 	}
-	data, err := x.Markdown()
-	if err != nil {
-		return nil, fmt.Errorf("unable to render markdown: %v", err)
-	}
-	note.Content = string(data)
 	return note, nil
 }

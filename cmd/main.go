@@ -91,7 +91,6 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Description: "Use this sync from remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
-							panic("BUG HERE")
 							x, err := livemd.FromFile(cfg.filename)
 							if err != nil {
 								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
