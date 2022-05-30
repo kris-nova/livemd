@@ -12,13 +12,14 @@ Live streams exclusively on Twitch. [Follow Kris Nova](https://www.twitch.tv/kri
 
 ### Configuration
 
-Data Start
+data:
 ```json
 {
   "title": "{{ .Title }}"
 }
 ```
-Data Stop
+data:
+
 
 ### Notes
 

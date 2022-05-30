@@ -18,9 +18,12 @@ package livemd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"html/template"
 	"io/ioutil"
+	"strings"
 
 	"github.com/kris-nova/live/pkg"
 
@@ -62,12 +65,39 @@ func FromHackMD(client *hackmd.Client, id string) (*LiveMD, error) {
 	return nil, nil
 }
 
+const (
+	DataStartDelim string = "data:\n" + "```json\n"
+	DataStopDelim  string = "\n```\n" + "data:\n"
+)
+
 func FromRaw(data []byte) (*LiveMD, error) {
 	x := &LiveMD{
 		Data: data,
 	}
-
+	rawBytes, err := findRaw(data)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(rawBytes, x)
+	if err != nil {
+		logrus.Warnf(string(rawBytes))
+		return nil, fmt.Errorf("unable to unmarshal raw: %v", err)
+	}
 	return x, nil
+}
+
+func findRaw(data []byte) ([]byte, error) {
+	str := string(data)
+	spl := strings.Split(str, DataStartDelim)
+	if len(spl) != 2 {
+		return nil, fmt.Errorf("invalid DataStartDelim")
+	}
+	spll := strings.Split(spl[1], DataStopDelim)
+	if len(spll) != 2 {
+		return nil, fmt.Errorf("invalid DataStopDelim")
+	}
+	raw := spll[0]
+	return []byte(raw), nil
 }
 
 func (x *LiveMD) Write(path string) error {
@@ -93,5 +123,14 @@ func (x *LiveMD) Markdown() ([]byte, error) {
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to execute template: %v", err)
 	}
-	return buf.Bytes(), nil
+	rawBytes, err := findRaw(buf.Bytes())
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to find raw data: %v", err)
+	}
+	newBytes, err := json.MarshalIndent(x, "", "   ")
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to marshal new bytes: %v", err)
+	}
+	str := strings.Replace(buf.String(), string(rawBytes), string(newBytes), 1)
+	return []byte(str), nil
 }
