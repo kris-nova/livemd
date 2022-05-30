@@ -31,7 +31,9 @@ func (x *LiveMD) Status() *LiveMDStatus {
 
 func (s *LiveMDStatus) String() string {
 	var str string
-	str += fmt.Sprintf("Title   : %s\n", s.LiveMD.Title)
-	str += fmt.Sprintf("Episode : %d\n", s.LiveMD.I)
+	str += fmt.Sprintf("\n========================================================================================\n")
+	str += fmt.Sprintf("Title             : %s\n", s.LiveMD.Title)
+	str += fmt.Sprintf("Episode           : %d\n", s.LiveMD.I)
+	str += fmt.Sprintf("========================================================================================\n\n")
 	return str
 }

@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/kris-nova/live/pkg/hackmd"
 	"os"
 	"time"
 
@@ -37,6 +38,7 @@ var cfg = &AppOptions{}
 type AppOptions struct {
 	verbose  bool
 	filename string
+	token    string
 }
 
 // # Edit ./live.md
@@ -86,6 +88,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Description: "Use this sync from remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
+
 							return nil
 						},
 					},
@@ -142,15 +145,31 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 		},
 	}
 	Preloader()
-	err := app.Run(os.Args)
+	err := Validation()
+	if err != nil {
+		logrus.Errorf("Failed Validation: %v", err)
+		os.Exit(99)
+	}
+	err = app.Run(os.Args)
 	if err != nil {
 		logrus.Errorf("Runtime: %v", err)
+		os.Exit(1)
 	}
+	os.Exit(0)
+}
+
+func Validation() error {
+	cfg.token = os.Getenv(hackmd.EnvironmentalVariableToken)
+	if cfg.token == "" {
+		return fmt.Errorf("empty environmental variable [%s]", hackmd.EnvironmentalVariableToken)
+	}
+	return nil
 }
 
 // Preloader will run for ALL commands, and is used
 // to initalize the runtime environments of the program.
 func Preloader() {
+
 	/* Flag parsing */
 	if cfg.verbose {
 		logrus.SetLevel(logrus.DebugLevel)
