@@ -20,8 +20,15 @@ data:
 ```
 data:
 
+---
 
-### Notes
+⚠ Do Not Edit Above This Line ⚠ Do Not Edit Above This Line ⚠
+
+---
+
+### Stream Notes
+
+Safe to edit here.
 
  - ...
  - ...

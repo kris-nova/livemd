@@ -86,6 +86,7 @@ func FromRaw(data []byte) (*LiveMD, error) {
 	return x, nil
 }
 
+// findRaw will find the embedded raw data in the content
 func findRaw(data []byte) ([]byte, error) {
 	str := string(data)
 	spl := strings.Split(str, DataStartDelim)
