@@ -1,19 +1,14 @@
-# Kris Nóva Live
+# Live
 
-<!-- YouTube Video ID in 3 places -->
+Centralized live stream notes, metadata, and keyword tagging for Twitch, YouTube, and HackMD.
 
-[YouTube Video Archive Link](https://www.youtube.com/watch?v=85wlpC6LQfk)
+```
+export HACKMD_TOKEN="49BY6KGJX4XW9MRKCTOZY8FVHPEZKIC6G0ILOI0D6N3XGQJ9Q7"
+export HACKMD_ID="xxYJeDxMRASxW2jIAxjV_g"
+```
 
-<a href="https://www.youtube.com/watch?v=85wlpC6LQfk
-" target="_blank"><img src="http://img.youtube.com/vi/85wlpC6LQfk/hqdefault.jpg" width="480" height="360" border="10" /></a>
 
-<!-- YouTube Video ID in 3 places -->
 
-# <a href="https://twitch.tv/krisnova"><img src ="https://i.imgur.com/1H8qkDT.png" width="60px"> Live on Twitch!</a> 
-
-Live streams exclusively on Twitch. [Follow Kris Nova](https://www.twitch.tv/krisnova) on Twitch to join in on the fun!
-
-#### twitch.tv/krisnova
 
 # Live Tool
 

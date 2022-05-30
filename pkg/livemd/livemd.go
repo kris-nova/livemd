@@ -38,6 +38,8 @@ type LiveMD struct {
 	Title     string
 	I         int
 	YouTubeID string
+	TwitchID  string
+	HackMDID  string
 	Data      []byte
 }
 
@@ -134,4 +136,18 @@ func (x *LiveMD) Markdown() ([]byte, error) {
 	}
 	str := strings.Replace(buf.String(), string(rawBytes), string(newBytes), 1)
 	return []byte(str), nil
+}
+
+// HackMDNote will convert a *LiveMD to a *hackmd.Note with an optional ID (can be empty)
+func (x *LiveMD) HackMDNote(id string) (*hackmd.Note, error) {
+	note := &hackmd.Note{
+		ID:    id,
+		Title: x.Title,
+	}
+	data, err := x.Markdown()
+	if err != nil {
+		return nil, fmt.Errorf("unable to render markdown: %v", err)
+	}
+	note.Content = string(data)
+	return note, nil
 }

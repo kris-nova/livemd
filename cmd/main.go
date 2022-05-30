@@ -36,9 +36,10 @@ const (
 var cfg = &AppOptions{}
 
 type AppOptions struct {
-	verbose  bool
-	filename string
-	token    string
+	verbose     bool
+	filename    string
+	hackmdToken string
+	hackmdID    string
 }
 
 // # Edit ./live.md
@@ -133,7 +134,27 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					// New with name
 					logrus.Infof("Creating New Stream \"%s\"", title)
 					x := livemd.New(title)
-					return x.Write(cfg.filename)
+					err := x.Write(cfg.filename)
+					if err != nil {
+						return fmt.Errorf("unable to write local: %v", err)
+					}
+					client := hackmd.New(cfg.hackmdToken)
+					note, err := x.HackMDNote(cfg.hackmdID)
+					if err != nil {
+						return fmt.Errorf("unable to generate hackmd note: %v", err)
+					}
+					if note.ID == "" {
+						logrus.Infof("Creating new hackMD note: %s", note.Title)
+						note, err = client.CreateNote(note)
+					} else {
+						logrus.Infof("Updating hackMD note: %s", note.Title)
+						note, err = client.UpdateNote(note)
+					}
+					if err != nil {
+						return fmt.Errorf("unable to save to hackmd: %v", err)
+					}
+					logrus.Infof("Successful save: %s", note.ID)
+					return nil
 				},
 			},
 		},
@@ -159,9 +180,9 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 }
 
 func Validation() error {
-	cfg.token = os.Getenv(hackmd.EnvironmentalVariableToken)
-	if cfg.token == "" {
-		return fmt.Errorf("empty environmental variable [%s]", hackmd.EnvironmentalVariableToken)
+	cfg.hackmdToken = os.Getenv(hackmd.EnvironmentalVariableHackMDToken)
+	if cfg.hackmdToken == "" {
+		return fmt.Errorf("empty environmental variable [%s]", hackmd.EnvironmentalVariableHackMDToken)
 	}
 	return nil
 }
@@ -169,12 +190,15 @@ func Validation() error {
 // Preloader will run for ALL commands, and is used
 // to initalize the runtime environments of the program.
 func Preloader() {
-
 	/* Flag parsing */
 	if cfg.verbose {
 		logrus.SetLevel(logrus.DebugLevel)
 	} else {
 		logrus.SetLevel(logrus.InfoLevel)
+	}
+	cfg.hackmdID = os.Getenv(hackmd.EnvironmentalVariableHackMDID)
+	if cfg.hackmdID != "" {
+		logrus.Infof("Loading HackMD ID: %s", cfg.hackmdID)
 	}
 }
 

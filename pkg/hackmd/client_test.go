@@ -23,9 +23,9 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	token := os.Getenv(EnvironmentalVariableToken)
+	token := os.Getenv(EnvironmentalVariableHackMDToken)
 	if token == "" {
-		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableToken)
+		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableHackMDToken)
 		t.FailNow()
 	}
 	client := New(token)
@@ -41,9 +41,9 @@ func TestClient(t *testing.T) {
 }
 
 func TestClientNotes(t *testing.T) {
-	token := os.Getenv(EnvironmentalVariableToken)
+	token := os.Getenv(EnvironmentalVariableHackMDToken)
 	if token == "" {
-		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableToken)
+		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableHackMDToken)
 		t.FailNow()
 	}
 	client := New(token)
@@ -63,9 +63,9 @@ const (
 )
 
 func TestClientNote(t *testing.T) {
-	token := os.Getenv(EnvironmentalVariableToken)
+	token := os.Getenv(EnvironmentalVariableHackMDToken)
 	if token == "" {
-		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableToken)
+		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableHackMDToken)
 		t.FailNow()
 	}
 	client := New(token)
@@ -81,9 +81,9 @@ func TestClientNote(t *testing.T) {
 }
 
 func TestClientCreateDelete(t *testing.T) {
-	token := os.Getenv(EnvironmentalVariableToken)
+	token := os.Getenv(EnvironmentalVariableHackMDToken)
 	if token == "" {
-		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableToken)
+		t.Errorf("Unable to read [%s] environmental variable. Empty.", EnvironmentalVariableHackMDToken)
 		t.FailNow()
 	}
 	client := New(token)

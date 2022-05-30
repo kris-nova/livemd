@@ -81,7 +81,34 @@ func (c *Client) GetNote(id string) (*Note, error) {
 
 func (c *Client) CreateNote(note *Note) (*Note, error) {
 	payload, err := json.Marshal(note)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := c.POST("notes", payload)
+	if err != nil {
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read body: %v", err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("Response %d %s\n", resp.StatusCode, string(data))
+	}
+	var v *Note
+	err = json.Unmarshal(data, &v)
+	if err != nil {
+		return nil, fmt.Errorf("unable to JSON unmarshal body: %v", err)
+	}
+	return v, nil
+}
+
+func (c *Client) UpdateNote(note *Note) (*Note, error) {
+	payload, err := json.Marshal(note)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.PATCH(fmt.Sprintf("notes/%s", note.ID), payload)
 	if err != nil {
 		return nil, err
 	}

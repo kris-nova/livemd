@@ -42,8 +42,11 @@ const (
 	// EndpointV1Format is the endpoint formatter to use
 	EndpointV1Format string = "https://api.hackmd.io/v1/%s"
 
-	// EnvironmentalVariableToken is the variable to search for a token
-	EnvironmentalVariableToken string = "HACKMD_TOKEN"
+	// EnvironmentalVariableHackMDToken is the variable to search for a token
+	EnvironmentalVariableHackMDToken string = "HACKMD_TOKEN"
+
+	// EnvironmentalVariableHackMDID is the variable to use for persistent hackmd notes
+	EnvironmentalVariableHackMDID string = "HACKMD_ID"
 )
 
 type Client struct {
@@ -77,6 +80,16 @@ func (c *Client) GET(endpoint string) (*http.Response, error) {
 
 func (c *Client) POST(endpoint string, data []byte) (*http.Response, error) {
 	req, err := http.NewRequest("POST", fmt.Sprintf(c.endpointf, endpoint), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(BearerTokenHeaderKey, fmt.Sprintf(BearerTokenHeaderValueFormat, c.bearerToken))
+	return c.client.Do(req)
+}
+
+func (c *Client) PATCH(endpoint string, data []byte) (*http.Response, error) {
+	req, err := http.NewRequest("PATCH", fmt.Sprintf(c.endpointf, endpoint), bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
