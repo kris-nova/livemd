@@ -74,7 +74,7 @@ const (
 
 func FromRaw(data []byte) (*LiveMD, error) {
 	x := &LiveMD{}
-	rawBytes, err := findRaw(data)
+	rawBytes, err := findRawData(data)
 	if err != nil {
 		return nil, err
 	}
@@ -87,11 +87,13 @@ func FromRaw(data []byte) (*LiveMD, error) {
 	return x, nil
 }
 
-// findRaw will find the embedded raw data in the content
-func findRaw(data []byte) ([]byte, error) {
+// findRawData will find the embedded raw data in the content
+func findRawData(data []byte) ([]byte, error) {
 	str := string(data)
 	spl := strings.Split(str, DataStartDelim)
 	if len(spl) != 2 {
+		fmt.Println(spl)
+		fmt.Print(len(spl))
 		return nil, fmt.Errorf("invalid DataStartDelim")
 	}
 	spll := strings.Split(spl[1], DataStopDelim)
@@ -125,7 +127,7 @@ func (x *LiveMD) Markdown() ([]byte, error) {
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to execute template: %v", err)
 	}
-	rawBytes, err := findRaw(buf.Bytes())
+	rawBytes, err := findRawData(buf.Bytes())
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to find raw data: %v", err)
 	}
