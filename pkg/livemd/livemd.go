@@ -129,6 +129,7 @@ func (x *LiveMD) Markdown() ([]byte, error) {
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to find raw data: %v", err)
 	}
+	x.Data = []byte("") // Unset data
 	newBytes, err := json.MarshalIndent(x, "", "   ")
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to marshal new bytes: %v", err)

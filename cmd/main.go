@@ -123,6 +123,35 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Description: "Use this command to overwrite remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
+							x, err := livemd.FromFile(cfg.filename)
+							if err != nil {
+								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
+							}
+							client := hackmd.New(cfg.hackmdToken)
+							if cfg.hackmdID == "" {
+								return fmt.Errorf("empty HACKMD_ID")
+							}
+							y, err := client.GetNote(cfg.hackmdID)
+							if err != nil {
+								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
+							}
+							z, err := x.HackMDNote(cfg.hackmdID)
+							if err != nil {
+								return fmt.Errorf("unable to conver to hackmd note: %v", err)
+							}
+							if !Compare(y, z) {
+								logrus.Warnf("Update detected! Will overwrite local with remote!")
+								Pause()
+							}
+							x, err = livemd.FromRaw([]byte(y.Content))
+							if err != nil {
+								return fmt.Errorf("invalid remote note: %v", err)
+							}
+							err = x.Write(cfg.filename)
+							if err != nil {
+								return fmt.Errorf("unable to write local: %v", err)
+							}
+							logrus.Infof("Saved: %s", z.ID)
 							return nil
 						},
 					},
@@ -263,6 +292,6 @@ func hash(s string) uint32 {
 }
 
 func Pause() {
-	fmt.Println("Press any key to continue...")
+	fmt.Print("Press any key to continue...")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 }

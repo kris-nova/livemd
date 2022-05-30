@@ -11,7 +11,7 @@ Live streams exclusively on Twitch. [Follow Kris Nova](https://www.twitch.tv/kri
 #### twitch.tv/krisnova
 
 ### Configuration
-
+    
 data:
 ```json
 {
