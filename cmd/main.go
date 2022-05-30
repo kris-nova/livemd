@@ -17,8 +17,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/kris-nova/live/pkg/hackmd"
+	"hash/fnv"
 	"os"
 	"time"
 
@@ -89,8 +91,29 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Description: "Use this sync from remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
-
-							return nil
+							x, err := livemd.FromFile(cfg.filename)
+							if err != nil {
+								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
+							}
+							client := hackmd.New(cfg.hackmdToken)
+							if cfg.hackmdID == "" {
+								return fmt.Errorf("empty HACKMD_ID")
+							}
+							y, err := client.GetNote(cfg.hackmdID)
+							if err != nil {
+								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
+							}
+							z, err := x.HackMDNote(cfg.hackmdID)
+							if err != nil {
+								return fmt.Errorf("unable to conver to hackmd note: %v", err)
+							}
+							if !Compare(y, z) {
+								logrus.Warnf("Update detected! Will overwrite remote with local!")
+								Pause()
+							}
+							_, err = client.UpdateNote(z)
+							logrus.Infof("Saved: %s", z.ID)
+							return err
 						},
 					},
 					{
@@ -223,4 +246,23 @@ func GlobalFlags(c []cli.Flag) []cli.Flag {
 		c = append(c, gf)
 	}
 	return c
+}
+
+func Compare(a, b *hackmd.Note) bool {
+
+	h1 := hash(string(a.Content))
+	h2 := hash(string(b.Content))
+	logrus.Infof("Compare %d:%d", h1, h2)
+	return h1 == h2
+}
+
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
+}
+
+func Pause() {
+	fmt.Println("Press any key to continue...")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
 }
