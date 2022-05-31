@@ -58,7 +58,7 @@ func Write(data []byte, path string) error {
 	if raw == "" {
 		return embed(str, path)
 	} else {
-		return replace(raw, path)
+		return replace(str, path)
 	}
 	return nil
 }
@@ -112,7 +112,15 @@ func findRaw(path string) (string, error) {
 }
 
 func between(str string, start string, stop string) (result string) {
-	return strings.TrimLeft(strings.TrimRight(str, stop), start)
+	spl1 := strings.Split(str, start)
+	if len(spl1) != 2 {
+		return ""
+	}
+	spl2 := strings.Split(spl1[1], stop)
+	if len(spl2) != 2 {
+		return ""
+	}
+	return spl2[0]
 }
 
 func replace(raw string, path string) error {
@@ -131,7 +139,7 @@ func replace(raw string, path string) error {
 		// 3. after
 		return fmt.Errorf("invalid embed: not 3: %d", len(spl))
 	}
-	spl[1] = EmbedStart + raw + EmbedStop
+	spl[1] = EmbedDelim + raw + EmbedDelim
 	str := strings.Join(spl, "")
 	return ioutil.WriteFile(path, []byte(str), DefaultPermission)
 }

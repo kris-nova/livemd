@@ -4,5 +4,11 @@ This is a valid markdown file that has preexisting data to reconcile.
 
 
 ```
-:embed::embed:
+:embed:eyJVcGRhdGVkIjoiMjAyMi0wNS0zMFQyMDo0NzoxOS4yNjI0MTQ3NDUtMDQ6MDAiLCJEYXRhIjoiZXlKT1lXMWxJam9pWW1GeWJtRmllU0lzSWtOdmJuUmxiblFpT2lJaUxDSk9kVzFpWlhJaU9qZDkifQ==:embed:
 ```
+
+Beeps boops
+
+# Scoops
+
+Something

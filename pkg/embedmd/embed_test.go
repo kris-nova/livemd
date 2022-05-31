@@ -26,6 +26,17 @@ type TestObject struct {
 	Number  int
 }
 
+func TestFindRaw(t *testing.T) {
+	needle := "TestDataRaw"
+	find, err := findRaw("testdata/simple_raw.md")
+	if err != nil {
+		t.Errorf("unable to findRaw: %v", err)
+	}
+	if find != needle {
+		t.Errorf("expecting: %s, found: %s", needle, find)
+	}
+}
+
 func TestValidExisting(t *testing.T) {
 	v := &TestObject{
 		Name:   "barnaby",

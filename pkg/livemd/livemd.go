@@ -20,10 +20,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"html/template"
 	"io/ioutil"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/kris-nova/live/pkg"
 

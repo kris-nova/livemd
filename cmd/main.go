@@ -19,10 +19,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/kris-nova/live/pkg/hackmd"
 	"hash/fnv"
 	"os"
 	"time"
+
+	"github.com/kris-nova/live/pkg/hackmd"
 
 	"github.com/kris-nova/live/pkg/livemd"
 

@@ -17,9 +17,10 @@
 package livemd
 
 import (
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
