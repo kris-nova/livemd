@@ -131,7 +131,7 @@ func replace(raw string, path string) error {
 		// 3. after
 		return fmt.Errorf("invalid embed: not 3: %d", len(spl))
 	}
-	spl[1] = raw
+	spl[1] = EmbedStart + raw + EmbedStop
 	str := strings.Join(spl, "")
 	return ioutil.WriteFile(path, []byte(str), DefaultPermission)
 }
