@@ -42,10 +42,27 @@ type E struct {
 	Data    []byte
 }
 
+func ReadVFile(v interface{}, path string) error {
+	var err error
+	_, err = os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("file read error: %s: %v", path, err)
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("unable to read file: %s: %v", path, err)
+	}
+	err = Unmarshal(data, v)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal: %v", err)
+	}
+	return nil
+}
+
 func RecordVFile(v interface{}, path string) error {
 	var dataToWrite []byte
 	var err error
-	stat, err := os.Stat(path)
+	_, err = os.Stat(path)
 	if err != nil {
 		// File does not exist
 		dataToWrite, err = RecordV([]byte(""), v)
@@ -84,7 +101,7 @@ func embed(data, raw []byte) ([]byte, error) {
 	str += "\n"
 	str += "\n"
 	str += EmbedStart
-	str += dataStr
+	str += string(raw)
 	str += EmbedStop
 	str += "\n"
 	str += "\n"
