@@ -30,12 +30,13 @@ import (
 )
 
 type LiveMD struct {
-	Content   []byte
-	Title     string
-	I         int
-	YouTubeID string
-	TwitchID  string
-	HackMDID  string
+	content     []byte
+	Initialized bool
+	Title       string
+	I           int
+	YouTubeID   string
+	TwitchID    string
+	HackMDID    string
 }
 
 func New(title string) *LiveMD {
@@ -68,23 +69,20 @@ func FromRemote(client *hackmd.Client, id string) (*LiveMD, error) {
 func FromRaw(raw []byte) (*LiveMD, error) {
 	x := &LiveMD{}
 	err := embedmd.Unmarshal(raw, x)
+
 	return x, err
 }
 
 func (x *LiveMD) Write(path string) error {
-	data, err := x.Data()
-	if err != nil {
-		return fmt.Errorf("unable to format markdown: %v", err)
-	}
-	return ioutil.WriteFile(path, data, embedmd.DefaultPermission)
+	return ioutil.WriteFile(path, x.content, embedmd.DefaultPermission)
 }
 
 // Data will return the raw file data calculated for a *LiveMD
 func (x *LiveMD) Data() ([]byte, error) {
 	var preData []byte
-	if len(x.Content) > 0 {
+	if len(x.content) > 0 {
 		// Preexisting
-		preData = x.Content
+		preData = x.content
 	} else {
 		// New
 		tpl := template.New(x.Title)
@@ -99,8 +97,26 @@ func (x *LiveMD) Data() ([]byte, error) {
 		}
 		preData = buf.Bytes()
 	}
-	x.Content = preData // Always update the content before writing
+	x.content = preData // Always update the content before writing
 	return embedmd.RecordV(preData, x)
+}
+
+func (x *LiveMD) SyncRaw(data []byte) {
+	x.content = data
+}
+
+// Sync will update the embedded data from the actual content on disk
+func (x *LiveMD) Sync(path string) error {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	ret, err := embedmd.RecordV(data, x)
+	if err != nil {
+		return err
+	}
+	x.content = ret
+	return nil
 }
 
 // ToHackMD will convert a *LiveMD to a *hackmd.Note with an optional ID (can be empty)

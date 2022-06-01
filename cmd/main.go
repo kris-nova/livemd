@@ -23,6 +23,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/kris-nova/live/pkg/embedmd"
+
 	"github.com/kris-nova/live/pkg/hackmd"
 
 	"github.com/kris-nova/live/pkg/livemd"
@@ -98,23 +100,28 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 							}
 							client := hackmd.New(cfg.hackmdToken)
 							if cfg.hackmdID == "" {
-								return fmt.Errorf("empty HACKMD_ID")
+								return fmt.Errorf("empty hackmd id")
 							}
-							y, err := client.GetNote(cfg.hackmdID)
+							err = x.Sync(cfg.filename)
 							if err != nil {
-								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
+								return fmt.Errorf("sync: %v", err)
 							}
 							z, err := x.ToHackMD(cfg.hackmdID)
 							if err != nil {
 								return fmt.Errorf("unable to conver to hackmd note: %v", err)
 							}
-							if !Compare(y, z) {
-								logrus.Warnf("Update detected! Will overwrite remote with local!")
-								Pause()
+							_, err = client.GetNote(cfg.hackmdID)
+							if err != nil {
+								// Does not exist
+								return fmt.Errorf("unable to find note: %s: %v", cfg.hackmdID, err)
 							}
 							_, err = client.UpdateNote(z)
-							logrus.Infof("Saved: %s", z.ID)
-							return err
+							if err != nil {
+								return fmt.Errorf("unable to push: %v", err)
+							}
+							logrus.Infof("Saved hackmd   : %s", cfg.hackmdID)
+							logrus.Infof("Saved filename : %s", cfg.filename)
+							return nil
 						},
 					},
 					{
@@ -124,10 +131,6 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Description: "Use this command to overwrite remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
-							x, err := livemd.FromLocal(cfg.filename)
-							if err != nil {
-								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
-							}
 							client := hackmd.New(cfg.hackmdToken)
 							if cfg.hackmdID == "" {
 								return fmt.Errorf("empty HACKMD_ID")
@@ -136,23 +139,18 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 							if err != nil {
 								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
 							}
-							z, err := x.ToHackMD(cfg.hackmdID)
+							x := &livemd.LiveMD{}
+							err = embedmd.Unmarshal([]byte(y.Content), x)
 							if err != nil {
-								return fmt.Errorf("unable to conver to hackmd note: %v", err)
+								return fmt.Errorf("invalid remote, unable to Unmarshal: %v", err)
 							}
-							if !Compare(y, z) {
-								logrus.Warnf("Update detected! Will overwrite local with remote!")
-								Pause()
-							}
-							x, err = livemd.FromRaw([]byte(y.Content))
-							if err != nil {
-								return fmt.Errorf("invalid remote note: %v", err)
-							}
+							x.SyncRaw([]byte(y.Content))
 							err = x.Write(cfg.filename)
 							if err != nil {
-								return fmt.Errorf("unable to write local: %v", err)
+								return fmt.Errorf("unable to write: %v", err)
 							}
-							logrus.Infof("Saved: %s", z.ID)
+							logrus.Infof("Saved hackmd   : %s", cfg.hackmdID)
+							logrus.Infof("Saved filename : %s", cfg.filename)
 							return nil
 						},
 					},

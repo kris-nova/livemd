@@ -10,26 +10,17 @@ Live streams exclusively on Twitch. [Follow Kris Nova](https://www.twitch.tv/kri
 
 #### twitch.tv/krisnova
 
-### Configuration
-    
-data:
-```json
-{
-  "title": "{{ .Title }}"
-}
-```
-data:
 
----
 
-⚠ Do Not Edit Above This Line ⚠ Do Not Edit Above This Line ⚠
-
----
-
-### Stream Notes
+# Stream Notes
 
 Safe to edit here.
 
  - ...
  - ...
+ - 
+---
 
+⚠ Do Not Edit Below This Line ⚠ Do Not Edit Below This Line ⚠
+
+---
