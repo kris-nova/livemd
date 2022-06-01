@@ -120,15 +120,10 @@ func (x *LiveMD) Sync(path string) error {
 }
 
 // ToHackMD will convert a *LiveMD to a *hackmd.Note with an optional ID (can be empty)
-func (x *LiveMD) ToHackMD(id string) (*hackmd.Note, error) {
-	data, err := x.Data()
-	if err != nil {
-		return nil, fmt.Errorf("unable to render: %v", err)
-	}
-	note := &hackmd.Note{
+func (x *LiveMD) ToHackMD(id string) *hackmd.Note {
+	return &hackmd.Note{
 		ID:      id,
 		Title:   x.Title,
-		Content: string(data),
+		Content: string(x.content),
 	}
-	return note, nil
 }

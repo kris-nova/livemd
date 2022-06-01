@@ -106,16 +106,12 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 							if err != nil {
 								return fmt.Errorf("sync: %v", err)
 							}
-							z, err := x.ToHackMD(cfg.hackmdID)
-							if err != nil {
-								return fmt.Errorf("unable to conver to hackmd note: %v", err)
-							}
 							_, err = client.GetNote(cfg.hackmdID)
 							if err != nil {
 								// Does not exist
 								return fmt.Errorf("unable to find note: %s: %v", cfg.hackmdID, err)
 							}
-							_, err = client.UpdateNote(z)
+							_, err = client.UpdateNote(x.ToHackMD(cfg.hackmdID))
 							if err != nil {
 								return fmt.Errorf("unable to push: %v", err)
 							}
@@ -191,10 +187,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						return fmt.Errorf("unable to write local: %v", err)
 					}
 					client := hackmd.New(cfg.hackmdToken)
-					note, err := x.ToHackMD(cfg.hackmdID)
-					if err != nil {
-						return fmt.Errorf("unable to generate hackmd note: %v", err)
-					}
+					note := x.ToHackMD(cfg.hackmdID)
 					if note.ID == "" {
 						logrus.Infof("Creating new hackMD note: %s", note.Title)
 						note, err = client.CreateNote(note)
