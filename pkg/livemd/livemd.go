@@ -24,15 +24,9 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/kris-nova/live/pkg"
 
 	"github.com/kris-nova/live/pkg/hackmd"
-)
-
-const (
-	LiveMDPerm = 0655
 )
 
 type LiveMD struct {
@@ -73,18 +67,11 @@ const (
 	DataStopDelim  string = "\n```\n" + "data:\n"
 )
 
-func FromRaw(data []byte) (*LiveMD, error) {
+// FromRaw is a determinstic function that will return a *LiveMD
+// from a path on disk.
+func FromRaw(raw []byte) (*LiveMD, error) {
 	x := &LiveMD{}
-	rawBytes, err := findRawData(data)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(rawBytes, x)
-	if err != nil {
-		logrus.Warnf(string(rawBytes))
-		return nil, fmt.Errorf("unable to unmarshal raw: %v", err)
-	}
-	x.Data = data // Always overwrite the data at the end
+	// Todo use embedmd
 	return x, nil
 }
 

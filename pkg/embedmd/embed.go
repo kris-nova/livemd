@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 )
@@ -41,54 +42,122 @@ type E struct {
 	Data    []byte
 }
 
-func Write(data []byte, path string) error {
+func RecordVFile(v interface{}, path string) error {
+	var dataToWrite []byte
+	var err error
+	stat, err := os.Stat(path)
+	if err != nil {
+		// File does not exist
+		dataToWrite, err = RecordV([]byte(""), v)
+		if err != nil {
+			return fmt.Errorf("unable to RecordV: %v", err)
+		}
+	} else {
+		fileBytes, err := ioutil.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("unable to read path: %s: %v", path, err)
+		}
+		dataToWrite, err = RecordV(fileBytes, v)
+		if err != nil {
+			return fmt.Errorf("unable to RecordV: %v", err)
+		}
+	}
+	return ioutil.WriteFile(path, dataToWrite, DefaultPermission)
+}
+
+// RecordV will replace an embed source with a new one (if it exists), otherwise will append to the end
+func RecordV(data []byte, v interface{}) ([]byte, error) {
+	dataStr := string(data)
+	rawBytes, err := Marshal(v)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to Marshal: %v", err)
+	}
+	if !strings.Contains(dataStr, EmbedDelim) {
+		return embed(data, rawBytes)
+	}
+	return replace(data, rawBytes)
+}
+
+func embed(data, raw []byte) ([]byte, error) {
+	dataStr := string(data)
+	var str string
+	str += "\n"
+	str += "\n"
+	str += EmbedStart
+	str += dataStr
+	str += EmbedStop
+	str += "\n"
+	str += "\n"
+	combine := dataStr + str
+	return []byte(combine), nil
+}
+
+func replace(data, raw []byte) ([]byte, error) {
+	dataStr := string(data)
+	spl := strings.Split(dataStr, EmbedDelim)
+	if len(spl) != 3 {
+		return []byte(""), fmt.Errorf("invalid embed: not 3: %d", len(spl))
+	}
+	spl[1] = EmbedDelim + string(raw) + EmbedDelim
+	str := strings.Join(spl, "")
+	return []byte(str), nil
+}
+
+// MarshalMarkdown will cast any interface into a raw embed string (this will include the markdown syntax).
+func MarshalMarkdown(v interface{}) ([]byte, error) {
+	e, err := MarshalMarkdown(v)
+	if err != nil {
+		return []byte(""), err
+	}
+	var str string
+	str += "\n"
+	str += "\n"
+	str += EmbedStart
+	str += string(e)
+	str += EmbedStop
+	str += "\n"
+	str += "\n"
+	return []byte(str), nil
+}
+
+// Marshal will cast any interface into a raw embed string (raw, no syntax).
+func Marshal(v interface{}) ([]byte, error) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable json marshal object: %v", err)
+	}
 	e := &E{
 		Data:    data,
 		Updated: time.Now(),
 	}
 	jbytes, err := json.Marshal(e)
 	if err != nil {
-		return fmt.Errorf("internal marshal failure: %v", err)
+		return []byte(""), fmt.Errorf("internal marshal failure: %v", err)
 	}
 	str := base64.StdEncoding.EncodeToString(jbytes)
-	raw, err := findRaw(path)
-	if err != nil {
-		return fmt.Errorf("internal marshal failure: %v", err)
-	}
-	if raw == "" {
-		return embed(str, path)
-	} else {
-		return replace(str, path)
-	}
-	return nil
+	return []byte(str), nil
 }
 
-func WriteV(v interface{}, path string) error {
-	data, err := json.Marshal(v)
-	if err != nil {
-		return fmt.Errorf("unable json marshal object: %v", err)
-	}
-	return Write(data, path)
-}
-
-func ReadV(v interface{}, path string) error {
-	buf := &bytes.Buffer{}
-	err := Read(buf, path)
+// Unmarshal will cast the embedded data onto an interface{]
+func Unmarshal(data []byte, v interface{}) error {
+	raw := &bytes.Buffer{}
+	err := read(data, raw)
 	if err != nil {
 		return fmt.Errorf("unable to read: %v", err)
 	}
-	return json.Unmarshal(buf.Bytes(), v)
+	return json.Unmarshal(raw.Bytes(), v)
 }
 
-func Read(buf *bytes.Buffer, path string) error {
-	raw, err := findRaw(path)
+// read will read the raw (embedded data) directly from a data source (if it exists).
+func read(data []byte, raw *bytes.Buffer) error {
+	rawStr, err := findRaw(data)
 	if err != nil {
 		return fmt.Errorf("unable to find raw: %v", err)
 	}
-	if raw == "" {
+	if rawStr == "" {
 		return nil
 	}
-	jbytes, err := base64.StdEncoding.DecodeString(raw)
+	jbytes, err := base64.StdEncoding.DecodeString(rawStr)
 	if err != nil {
 		return fmt.Errorf("unable to decode: %v", err)
 	}
@@ -97,16 +166,12 @@ func Read(buf *bytes.Buffer, path string) error {
 	if err != nil {
 		return fmt.Errorf("unable to unmarshal e: %v", err)
 	}
-	buf.Write(e.Data)
+	raw.Write(e.Data)
 	return nil
 }
 
 // findRaw will find the raw string in a file if it exists, otherwise empty string
-func findRaw(path string) (string, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
+func findRaw(data []byte) (string, error) {
 	fileContent := string(data)
 	return between(fileContent, EmbedStart, EmbedStop), nil
 }
@@ -121,45 +186,4 @@ func between(str string, start string, stop string) (result string) {
 		return ""
 	}
 	return spl2[0]
-}
-
-func replace(raw string, path string) error {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	fileContent := string(data)
-	if !strings.Contains(fileContent, EmbedDelim) {
-		return fmt.Errorf("missing embed in file")
-	}
-	spl := strings.Split(fileContent, EmbedDelim)
-	if len(spl) != 3 {
-		// 1. before
-		// 2. raw
-		// 3. after
-		return fmt.Errorf("invalid embed: not 3: %d", len(spl))
-	}
-	spl[1] = EmbedDelim + raw + EmbedDelim
-	str := strings.Join(spl, "")
-	return ioutil.WriteFile(path, []byte(str), DefaultPermission)
-}
-
-// embed will append the raw content to a file
-func embed(raw string, path string) error {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	fileContent := string(data)
-	// ----------------
-	str := fileContent
-	str += "\n"
-	str += "\n"
-	str += EmbedStart
-	str += raw
-	str += EmbedStop
-	str += "\n"
-	str += "\n"
-	// ----------------
-	return ioutil.WriteFile(path, []byte(str), DefaultPermission)
 }
