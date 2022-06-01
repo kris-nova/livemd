@@ -18,24 +18,24 @@ package livemd
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"strings"
 
 	"github.com/kris-nova/live/pkg"
+
+	"github.com/kris-nova/live/pkg/embedmd"
 
 	"github.com/kris-nova/live/pkg/hackmd"
 )
 
 type LiveMD struct {
+	Content   []byte
 	Title     string
 	I         int
 	YouTubeID string
 	TwitchID  string
 	HackMDID  string
-	Data      []byte
 }
 
 func New(title string) *LiveMD {
@@ -45,7 +45,8 @@ func New(title string) *LiveMD {
 	}
 }
 
-func FromFile(path string) (*LiveMD, error) {
+// FromLocal will return a new *LiveMD from a local path
+func FromLocal(path string) (*LiveMD, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -53,7 +54,8 @@ func FromFile(path string) (*LiveMD, error) {
 	return FromRaw(data)
 }
 
-func FromHackMD(client *hackmd.Client, id string) (*LiveMD, error) {
+// FromRemote will fetch a *LiveMD from a remote HackMD client
+func FromRemote(client *hackmd.Client, id string) (*LiveMD, error) {
 	note, err := client.GetNote(id)
 	if err != nil {
 		return nil, err
@@ -62,78 +64,55 @@ func FromHackMD(client *hackmd.Client, id string) (*LiveMD, error) {
 	return nil, nil
 }
 
-const (
-	DataStartDelim string = "data:\n" + "```json\n"
-	DataStopDelim  string = "\n```\n" + "data:\n"
-)
-
-// FromRaw is a determinstic function that will return a *LiveMD
-// from a path on disk.
+// FromRaw is a determinstic function that will return a *LiveMD from a raw data source
 func FromRaw(raw []byte) (*LiveMD, error) {
 	x := &LiveMD{}
-	// Todo use embedmd
-	return x, nil
-}
-
-// findRawData will find the embedded raw data in the content
-func findRawData(data []byte) ([]byte, error) {
-	str := string(data)
-	spl := strings.Split(str, DataStartDelim)
-	if len(spl) != 2 {
-		fmt.Println(spl)
-		fmt.Print(len(spl))
-		return nil, fmt.Errorf("invalid DataStartDelim")
-	}
-	spll := strings.Split(spl[1], DataStopDelim)
-	if len(spll) != 2 {
-		return nil, fmt.Errorf("invalid DataStopDelim")
-	}
-	raw := spll[0]
-	return []byte(raw), nil
+	err := embedmd.Unmarshal(raw, x)
+	return x, err
 }
 
 func (x *LiveMD) Write(path string) error {
-	md, err := x.Markdown()
+	data, err := x.Data()
 	if err != nil {
 		return fmt.Errorf("unable to format markdown: %v", err)
 	}
-	return ioutil.WriteFile(path, md, LiveMDPerm)
+	return ioutil.WriteFile(path, data, embedmd.DefaultPermission)
 }
 
-// Markdown is a deterministic function based on the runtime configuration of *LiveMD
-// Markdown will template the live.md file in /pkg
-//
-// Markdown will NOT write from disk.
-func (x *LiveMD) Markdown() ([]byte, error) {
-	tpl := template.New(x.Title)
-	tpl, err := tpl.Parse(pkg.MarkdownTemplate)
-	if err != nil {
-		return []byte(""), fmt.Errorf("unable to parse template: %v", err)
+// Data will return the raw file data calculated for a *LiveMD
+func (x *LiveMD) Data() ([]byte, error) {
+	var preData []byte
+	if len(x.Content) > 0 {
+		// Preexisting
+		preData = x.Content
+	} else {
+		// New
+		tpl := template.New(x.Title)
+		tpl, err := tpl.Parse(pkg.MarkdownTemplate)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to parse template: %v", err)
+		}
+		buf := &bytes.Buffer{}
+		err = tpl.Execute(buf, x)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to execute template: %v", err)
+		}
+		preData = buf.Bytes()
 	}
-	buf := &bytes.Buffer{}
-	err = tpl.Execute(buf, x)
-	if err != nil {
-		return []byte(""), fmt.Errorf("unable to execute template: %v", err)
-	}
-	rawBytes, err := findRawData(buf.Bytes())
-	if err != nil {
-		return []byte(""), fmt.Errorf("unable to find raw data: %v", err)
-	}
-	x.Data = []byte("") // Unset data
-	newBytes, err := json.MarshalIndent(x, "", "   ")
-	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal new bytes: %v", err)
-	}
-	str := strings.Replace(buf.String(), string(rawBytes), string(newBytes), 1)
-	return []byte(str), nil
+	x.Content = preData // Always update the content before writing
+	return embedmd.RecordV(preData, x)
 }
 
-// HackMDNote will convert a *LiveMD to a *hackmd.Note with an optional ID (can be empty)
-func (x *LiveMD) HackMDNote(id string) (*hackmd.Note, error) {
+// ToHackMD will convert a *LiveMD to a *hackmd.Note with an optional ID (can be empty)
+func (x *LiveMD) ToHackMD(id string) (*hackmd.Note, error) {
+	data, err := x.Data()
+	if err != nil {
+		return nil, fmt.Errorf("unable to render: %v", err)
+	}
 	note := &hackmd.Note{
 		ID:      id,
 		Title:   x.Title,
-		Content: string(x.Data),
+		Content: string(data),
 	}
 	return note, nil
 }

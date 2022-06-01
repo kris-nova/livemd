@@ -92,7 +92,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Description: "Use this sync from remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
-							x, err := livemd.FromFile(cfg.filename)
+							x, err := livemd.FromLocal(cfg.filename)
 							if err != nil {
 								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
 							}
@@ -104,7 +104,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 							if err != nil {
 								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
 							}
-							z, err := x.HackMDNote(cfg.hackmdID)
+							z, err := x.ToHackMD(cfg.hackmdID)
 							if err != nil {
 								return fmt.Errorf("unable to conver to hackmd note: %v", err)
 							}
@@ -124,7 +124,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Description: "Use this command to overwrite remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
-							x, err := livemd.FromFile(cfg.filename)
+							x, err := livemd.FromLocal(cfg.filename)
 							if err != nil {
 								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
 							}
@@ -136,7 +136,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 							if err != nil {
 								return fmt.Errorf("unable to find local: %s: %v", cfg.filename, err)
 							}
-							z, err := x.HackMDNote(cfg.hackmdID)
+							z, err := x.ToHackMD(cfg.hackmdID)
 							if err != nil {
 								return fmt.Errorf("unable to conver to hackmd note: %v", err)
 							}
@@ -165,7 +165,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						Action: func(c *cli.Context) error {
 
 							// Status always comes from local state
-							x, err := livemd.FromFile(DefaultFile)
+							x, err := livemd.FromLocal(DefaultFile)
 							if err != nil {
 								return fmt.Errorf("unable to open %s: %v", DefaultFile, err)
 							}
@@ -193,7 +193,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						return fmt.Errorf("unable to write local: %v", err)
 					}
 					client := hackmd.New(cfg.hackmdToken)
-					note, err := x.HackMDNote(cfg.hackmdID)
+					note, err := x.ToHackMD(cfg.hackmdID)
 					if err != nil {
 						return fmt.Errorf("unable to generate hackmd note: %v", err)
 					}

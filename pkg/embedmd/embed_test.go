@@ -62,6 +62,5 @@ func TestValidExisting(t *testing.T) {
 	}
 	if x.Number != 7 {
 		t.Errorf("invalid read: expecing matching number")
-
 	}
 }
