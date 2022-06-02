@@ -17,5 +17,6 @@
 package discord
 
 const (
-	EnvironmentalVariableDiscordToken string = "LIVE_DISCORD_TOKEN"
+	EnvironmentalVariableDiscordToken   string = "LIVE_DISCORD_TOKEN"
+	EnvironmentalVariableDiscordChannel string = "LIVE_DISCORD_CHANNEL"
 )

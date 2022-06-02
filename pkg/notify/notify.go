@@ -35,8 +35,9 @@ const (
 )
 
 type Notifier struct {
-	Message string
-	Discord *discordgo.Session
+	Message        string
+	Discord        *discordgo.Session
+	discordChannel string
 }
 
 func New(message string) *Notifier {
@@ -49,12 +50,19 @@ func New(message string) *Notifier {
 // You must pass the RAW token data to this function in order to create a new client.
 //
 // More: https://discord.com/developers/
-func (n *Notifier) EnableDiscord(token string) error {
+func (n *Notifier) EnableDiscord(token string, channel string) error {
 	session, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return fmt.Errorf("unable to enable discord intergration: %v", err)
 	}
 	n.Discord = session
+	n.discordChannel = channel
+	if token == "" {
+		return fmt.Errorf("empty discord token")
+	}
+	if channel == "" {
+		return fmt.Errorf("empty channel ID")
+	}
 	return nil
 }
 
@@ -66,7 +74,12 @@ func (n *Notifier) Notify() error {
 
 	// Discord
 	if n.Discord != nil {
-		logrus.Info("Dispatch: Discord")
+		logrus.Info("Discord: Dispatching...")
+		n.Discord.Identify.Intents = 2048
+		_, err := n.Discord.ChannelMessageSend(n.discordChannel, n.Message)
+		if err != nil {
+			logrus.Warningf("Discord notification failure: %v", err)
+		}
 	}
 
 	return nil

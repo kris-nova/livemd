@@ -45,11 +45,12 @@ const (
 var cfg = &AppOptions{}
 
 type AppOptions struct {
-	verbose      bool
-	filename     string
-	hackmdToken  string
-	hackmdID     string
-	discordToken string
+	verbose        bool
+	filename       string
+	hackmdToken    string
+	hackmdID       string
+	discordToken   string
+	discordChannel string
 }
 
 // # Edit ./live.md
@@ -99,9 +100,11 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					}
 					notifier := notify.New(message)
 					var err error
-					err = notifier.EnableDiscord(cfg.discordToken)
+					err = notifier.EnableDiscord(cfg.discordToken, cfg.discordChannel)
 					if err != nil {
 						return fmt.Errorf("invalid discord token: %v", err)
+					} else {
+						logrus.Infof("Discord: Enabled")
 					}
 
 					// Run the notifications system
@@ -284,6 +287,11 @@ func Preloader() {
 	cfg.discordToken = os.Getenv(discord.EnvironmentalVariableDiscordToken)
 	if cfg.discordToken != "" {
 		logrus.Infof("Loading Discord Token: **********")
+	}
+
+	cfg.discordChannel = os.Getenv(discord.EnvironmentalVariableDiscordChannel)
+	if cfg.discordToken != "" {
+		logrus.Infof("Loading Discord Channel: %s", cfg.discordChannel)
 	}
 }
 
