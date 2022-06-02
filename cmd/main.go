@@ -132,6 +132,13 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						}
 					}
 
+					if cfg.mastodonUsername != "" {
+						err = notifier.EnableMastodon(cfg.mastodonServer, cfg.mastodonClientID, cfg.mastodonClientSecret, cfg.mastodonUsername, cfg.mastodonPassword)
+						if err != nil {
+							return fmt.Errorf("failed enabling twitter: %v", err)
+						}
+					}
+
 					// Run the notifications system
 					err = notifier.Notify()
 					logrus.Infof("=== Stopping Notification Bus ===")

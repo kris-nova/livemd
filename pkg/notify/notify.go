@@ -109,7 +109,22 @@ func (n *Notifier) EnableTwitter(accessToken, accessTokenSecret, consumerKey, co
 	return nil
 }
 
-func (n *Notifier) EnableMastodon(server, user, pass, clientID, clientSecret string) error {
+func (n *Notifier) EnableMastodon(server, clientID, clientSecret, user, pass string) error {
+	if server != "" {
+		return fmt.Errorf("empty server")
+	}
+	if clientID != "" {
+		return fmt.Errorf("empty clientID")
+	}
+	if clientSecret != "" {
+		return fmt.Errorf("empty clientSecret")
+	}
+	if user != "" {
+		return fmt.Errorf("empty user")
+	}
+	if pass != "" {
+		return fmt.Errorf("empty password")
+	}
 	client := mastodon.NewClient(&mastodon.Config{
 		Server:       server,
 		ClientID:     clientID,
