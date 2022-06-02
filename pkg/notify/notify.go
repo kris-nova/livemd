@@ -17,13 +17,12 @@
 package notify
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 
+	"github.com/McKael/madon"
 	"github.com/bwmarrin/discordgo"
 	"github.com/chimeracoder/anaconda"
-	"github.com/mattn/go-mastodon"
 	"github.com/sirupsen/logrus"
 )
 
@@ -48,7 +47,7 @@ type Notifier struct {
 	mastodonUsername string
 	mastodonServer   string
 	Twitter          *anaconda.TwitterApi
-	Mastodon         *mastodon.Client
+	Mastodon         *madon.Client
 }
 
 func New(message string) *Notifier {
@@ -109,33 +108,49 @@ func (n *Notifier) EnableTwitter(accessToken, accessTokenSecret, consumerKey, co
 	return nil
 }
 
-func (n *Notifier) EnableMastodon(server, clientID, clientSecret, user, pass string) error {
-	if server != "" {
+func (n *Notifier) EnableMastodon(server, accessToken, clientID, clientSecret, user, pass string) error {
+	if server == "" {
 		return fmt.Errorf("empty server")
 	}
-	if clientID != "" {
+	if clientID == "" {
 		return fmt.Errorf("empty clientID")
 	}
-	if clientSecret != "" {
+	if clientSecret == "" {
 		return fmt.Errorf("empty clientSecret")
 	}
-	if user != "" {
+	if user == "" {
 		return fmt.Errorf("empty user")
 	}
-	if pass != "" {
+	if pass == "" {
 		return fmt.Errorf("empty password")
 	}
-	client := mastodon.NewClient(&mastodon.Config{
-		Server:       server,
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-	})
-	err := client.Authenticate(context.Background(), user, pass)
+	fmt.Println("Server: ", server)
+	fmt.Println("User: ", user)
+	fmt.Println("Pass: ", pass)
+	fmt.Println("Client ID: ", clientID)
+	fmt.Println("Client Secret: ", clientSecret)
+	fmt.Println("Access Token: ", accessToken)
+
+	client, err := madon.RestoreApp("Live", "Hachyderm.io", clientID, clientSecret, nil)
 	if err != nil {
 		return fmt.Errorf("unable to enable mastodon integration: %v", err)
 	}
-	logrus.Infof("Mastodon authenticated! User: %s", user)
+	err = client.LoginBasic(user, pass, []string{"read", "write", "follow"})
+	if err != nil {
+		return fmt.Errorf("unable to enable mastodon integration: %v", err)
+	}
 	n.Mastodon = client
+
+	//client := mastodon.NewClient(&mastodon.Config{
+	//	Server:       server,
+	//	ClientID:     clientID,
+	//	ClientSecret: clientSecret,
+	//	AccessToken:  accessToken,
+	//})
+	//err := client.Authenticate(context.Background(), user, pass)
+
+	//logrus.Infof("Mastodon authenticated! User: %s", user)
+	//n.Mastodon = client
 	n.mastodonUsername = user
 	n.mastodonServer = server
 	return nil
@@ -173,15 +188,15 @@ func (n *Notifier) Notify() error {
 	// Mastodon
 	if n.Mastodon != nil && EnableMastodonSend {
 		logrus.Info("Mastodon: Dispatching...")
-		status, err := n.Mastodon.PostStatus(context.TODO(), &mastodon.Toot{
-			Status: n.Message,
-		})
-		if err != nil {
-			logrus.Warningf("Mastodon notification failure: %v", err)
-		} else {
-			logrus.Info("Mastodon: Sent!")
-			logrus.Info(status.URL)
-		}
+		//status, err := n.Mastodon.PostStatus(context.TODO(), &mastodon.Toot{
+		//	Status: n.Message,
+		//})
+		//if err != nil {
+		//	logrus.Warningf("Mastodon notification failure: %v", err)
+		//} else {
+		//	logrus.Info("Mastodon: Sent!")
+		//	//logrus.Info(status.URL)
+		//}
 	}
 
 	return nil

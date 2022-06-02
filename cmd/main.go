@@ -23,9 +23,9 @@ import (
 	"os"
 	"time"
 
-	mastodon "github.com/kris-nova/live/pkg/twitter"
+	"github.com/kris-nova/live/pkg/twitter"
 
-	twitter "github.com/kris-nova/live/pkg/mastodon"
+	"github.com/kris-nova/live/pkg/mastodon"
 
 	"github.com/kris-nova/live/pkg/notify"
 
@@ -66,6 +66,7 @@ type AppOptions struct {
 
 	mastodonClientID     string
 	mastodonClientSecret string
+	mastodonAccessToken  string
 	mastodonUsername     string
 	mastodonPassword     string
 	mastodonServer       string
@@ -133,9 +134,9 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					}
 
 					if cfg.mastodonUsername != "" {
-						err = notifier.EnableMastodon(cfg.mastodonServer, cfg.mastodonClientID, cfg.mastodonClientSecret, cfg.mastodonUsername, cfg.mastodonPassword)
+						err = notifier.EnableMastodon(cfg.mastodonServer, cfg.mastodonAccessToken, cfg.mastodonClientID, cfg.mastodonClientSecret, cfg.mastodonUsername, cfg.mastodonPassword)
 						if err != nil {
-							return fmt.Errorf("failed enabling twitter: %v", err)
+							return fmt.Errorf("failed enabling mastodon: %v", err)
 						}
 					}
 
@@ -366,6 +367,11 @@ func Preloader() {
 	cfg.mastodonClientSecret = os.Getenv(mastodon.EnvironmentalVariableMastodonClientSecret)
 	if cfg.mastodonClientSecret != "" {
 		logrus.Infof(" --> Loading Mastodon Client Secret: **********")
+	}
+
+	cfg.mastodonAccessToken = os.Getenv(mastodon.EnvironmentalVariableMastodonAccessToken)
+	if cfg.mastodonAccessToken != "" {
+		logrus.Infof(" --> Loading Mastodon Access Token: **********")
 	}
 
 	cfg.mastodonUsername = os.Getenv(mastodon.EnvironmentalVariableMastodonUsername)

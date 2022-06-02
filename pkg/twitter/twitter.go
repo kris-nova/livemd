@@ -14,12 +14,11 @@
  *                                                                           *
 \*===========================================================================*/
 
-package mastodon
+package twitter
 
 const (
-	EnvironmentalVariableMastodonClientID     string = "LIVE_MASTODON_CLIENT_ID"
-	EnvironmentalVariableMastodonClientSecret string = "LIVE_MASTODON_CLIENT_SECRET"
-	EnvironmentalVariableMastodonUsername     string = "LIVE_MASTODON_USERNAME"
-	EnvironmentalVariableMastodonPassword     string = "LIVE_MASTODON_PASSWORD"
-	EnvironmentalVariableMastodonServer       string = "LIVE_MASTODON_SERVER"
+	EnvironmentalVariableTwitterAccessToken       string = "LIVE_TWITTER_ACCESS_TOKEN"
+	EnvironmentalVariableTwitterAccessTokenSecret string = "LIVE_TWITTER_ACCESS_TOKEN_SECRET"
+	EnvironmentalVariableTwitterAPIKey            string = "LIVE_TWITTER_API_KEY"
+	EnvironmentalVariableTwitterAPIKeySecret      string = "LIVE_TWITTER_API_KEY_SECRET"
 )
