@@ -23,6 +23,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/kris-nova/live/pkg/twitter"
+
 	"github.com/kris-nova/live/pkg/notify"
 
 	"github.com/kris-nova/live/pkg/discord"
@@ -51,6 +53,12 @@ type AppOptions struct {
 	hackmdID       string
 	discordToken   string
 	discordChannel string
+
+	twitterApiKey       string
+	twitterApiKeySecret string
+	twitterBearerToken  string
+	twitterClientID     string
+	twitterClientSecret string
 }
 
 // # Edit ./live.md
@@ -100,11 +108,21 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					}
 					notifier := notify.New(message)
 					var err error
-					err = notifier.EnableDiscord(cfg.discordToken, cfg.discordChannel)
-					if err != nil {
-						return fmt.Errorf("invalid discord token: %v", err)
-					} else {
-						logrus.Infof("Discord: Enabled")
+					if cfg.discordToken != "" {
+						err = notifier.EnableDiscord(cfg.discordToken, cfg.discordChannel)
+						if err != nil {
+							return fmt.Errorf("invalid discord token: %v", err)
+						} else {
+							logrus.Infof("Discord: Enabled")
+						}
+					}
+					if cfg.twitterBearerToken != "" {
+						err = notifier.EnableTwitter(cfg.twitterClientID, cfg.twitterClientSecret)
+						if err != nil {
+							return fmt.Errorf("invalid discord token: %v", err)
+						} else {
+							logrus.Infof("Twitter: Enabled")
+						}
 					}
 
 					// Run the notifications system
@@ -292,6 +310,26 @@ func Preloader() {
 	cfg.discordChannel = os.Getenv(discord.EnvironmentalVariableDiscordChannel)
 	if cfg.discordToken != "" {
 		logrus.Infof("Loading Discord Channel: %s", cfg.discordChannel)
+	}
+
+	cfg.twitterBearerToken = os.Getenv(twitter.EnvironmentalVariableTwitterBearerToken)
+	if cfg.twitterBearerToken != "" {
+		logrus.Infof("Loading Twiter Bearer Token: **********")
+	}
+
+	cfg.twitterApiKey = os.Getenv(twitter.EnvironmentalVariableTwitterAPIKey)
+	if cfg.twitterApiKey != "" {
+		logrus.Infof("Loading Twitter API Key: %s", cfg.twitterApiKey)
+	}
+
+	cfg.twitterClientID = os.Getenv(twitter.EnvironmentalVariableTwitterClientID)
+	if cfg.twitterClientID != "" {
+		logrus.Infof("Loading Twiter Client ID: %s", cfg.twitterClientID)
+	}
+
+	cfg.twitterClientSecret = os.Getenv(twitter.EnvironmentalVariableTwitterClientSecret)
+	if cfg.twitterApiKeySecret != "" {
+		logrus.Infof("Loading Twiter Client Secret: Loading Twiter Client Secret: **********")
 	}
 }
 

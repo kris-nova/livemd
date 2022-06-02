@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/bwmarrin/discordgo v0.25.0
+	github.com/michimani/gotwi v0.11.4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.4.1
 )
