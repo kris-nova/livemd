@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build windows
 // +build windows
 
 package windows
@@ -66,6 +65,7 @@ const (
 	SERVICE_ACCEPT_HARDWAREPROFILECHANGE = 32
 	SERVICE_ACCEPT_POWEREVENT            = 64
 	SERVICE_ACCEPT_SESSIONCHANGE         = 128
+	SERVICE_ACCEPT_PRESHUTDOWN           = 256
 
 	SERVICE_CONTROL_STOP                  = 1
 	SERVICE_CONTROL_PAUSE                 = 2
@@ -81,6 +81,7 @@ const (
 	SERVICE_CONTROL_HARDWAREPROFILECHANGE = 12
 	SERVICE_CONTROL_POWEREVENT            = 13
 	SERVICE_CONTROL_SESSIONCHANGE         = 14
+	SERVICE_CONTROL_PRESHUTDOWN           = 15
 
 	SERVICE_ACTIVE    = 1
 	SERVICE_INACTIVE  = 2

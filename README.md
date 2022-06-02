@@ -2,13 +2,13 @@
 
 Centralized live stream notes, metadata, and keyword tagging for Twitch, YouTube, and HackMD.
 
+The junk drawer of managing live streams.
+
 ```
 export HACKMD_TOKEN="49BY6KGJX4XW9MRKCTOZY8FVHPEZKIC6G0ILOI0D6N3XGQJ9Q7"
 export HACKMD_ID="xxYJeDxMRASxW2jIAxjV_g"
+export DISCORD_TOKEN
 ```
-
-
-
 
 # Live Tool
 

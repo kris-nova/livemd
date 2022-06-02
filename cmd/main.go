@@ -23,6 +23,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/kris-nova/live/pkg/notify"
+
+	"github.com/kris-nova/live/pkg/discord"
+
 	"github.com/kris-nova/live/pkg/embedmd"
 
 	"github.com/kris-nova/live/pkg/hackmd"
@@ -41,10 +45,11 @@ const (
 var cfg = &AppOptions{}
 
 type AppOptions struct {
-	verbose     bool
-	filename    string
-	hackmdToken string
-	hackmdID    string
+	verbose      bool
+	filename     string
+	hackmdToken  string
+	hackmdID     string
+	discordToken string
 }
 
 // # Edit ./live.md
@@ -80,6 +85,29 @@ func main() {
 		UsageText: `live <cmd> <options> 
 Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 		Commands: []*cli.Command{
+			{
+				Name:      "notification",
+				Aliases:   []string{"notif", "n", "notify"},
+				Usage:     "Send notifications to configured backends.",
+				UsageText: "live notify <message>",
+				Action: func(c *cli.Context) error {
+					message := c.Args().Get(0)
+					if message == "" {
+						fmt.Println(live.Banner())
+						cli.ShowSubcommandHelp(c)
+						return nil
+					}
+					notifier := notify.New(message)
+					var err error
+					err = notifier.EnableDiscord(cfg.discordToken)
+					if err != nil {
+						return fmt.Errorf("invalid discord token: %v", err)
+					}
+
+					// Run the notifications system
+					return notifier.Notify()
+				},
+			},
 			{
 				Name:        "stream",
 				Aliases:     []string{"s"},
@@ -243,9 +271,19 @@ func Preloader() {
 	} else {
 		logrus.SetLevel(logrus.InfoLevel)
 	}
+
+	// ---
+	// Environmental Variable Parsing
+	// ---
+
 	cfg.hackmdID = os.Getenv(hackmd.EnvironmentalVariableHackMDID)
 	if cfg.hackmdID != "" {
 		logrus.Infof("Loading HackMD ID: %s", cfg.hackmdID)
+	}
+
+	cfg.discordToken = os.Getenv(discord.EnvironmentalVariableDiscordToken)
+	if cfg.discordToken != "" {
+		logrus.Infof("Loading Discord Token: **********")
 	}
 }
 
