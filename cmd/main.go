@@ -23,7 +23,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/kris-nova/live/pkg/twitter"
+	mastodon "github.com/kris-nova/live/pkg/twitter"
+
+	twitter "github.com/kris-nova/live/pkg/mastodon"
 
 	"github.com/kris-nova/live/pkg/notify"
 
@@ -47,10 +49,12 @@ const (
 var cfg = &AppOptions{}
 
 type AppOptions struct {
-	verbose        bool
-	filename       string
-	hackmdToken    string
-	hackmdID       string
+	verbose  bool
+	filename string
+
+	hackmdToken string
+	hackmdID    string
+
 	discordToken   string
 	discordChannel string
 
@@ -59,6 +63,12 @@ type AppOptions struct {
 	twitterBearerToken       string
 	twitterAccessToken       string
 	twitterAccessTokenSecret string
+
+	mastodonClientID     string
+	mastodonClientSecret string
+	mastodonUsername     string
+	mastodonPassword     string
+	mastodonServer       string
 }
 
 // # Edit ./live.md
@@ -107,6 +117,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 						return nil
 					}
 					notifier := notify.New(message)
+					logrus.Infof("=== Starting Notification Bus ===")
 					var err error
 					if cfg.discordToken != "" {
 						err = notifier.EnableDiscord(cfg.discordToken, cfg.discordChannel)
@@ -122,7 +133,12 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					}
 
 					// Run the notifications system
-					return notifier.Notify()
+					err = notifier.Notify()
+					logrus.Infof("=== Stopping Notification Bus ===")
+					if err != nil {
+						return err
+					}
+					return nil
 				},
 			},
 			{
@@ -295,39 +311,64 @@ func Preloader() {
 
 	cfg.hackmdID = os.Getenv(hackmd.EnvironmentalVariableHackMDID)
 	if cfg.hackmdID != "" {
-		logrus.Infof("Loading HackMD ID: %s", cfg.hackmdID)
+		logrus.Infof(" --> Loading HackMD ID: %s", cfg.hackmdID)
 	}
 
 	cfg.discordToken = os.Getenv(discord.EnvironmentalVariableDiscordToken)
 	if cfg.discordToken != "" {
-		logrus.Infof("Loading Discord Token: **********")
+		logrus.Infof(" --> Loading Discord Token: **********")
 	}
 
 	cfg.discordChannel = os.Getenv(discord.EnvironmentalVariableDiscordChannel)
 	if cfg.discordToken != "" {
-		logrus.Infof("Loading Discord Channel: %s", cfg.discordChannel)
+		logrus.Infof(" --> Loading Discord Channel: %s", cfg.discordChannel)
 	}
 
 	cfg.twitterApiKey = os.Getenv(twitter.EnvironmentalVariableTwitterAPIKey)
 	if cfg.twitterApiKey != "" {
 		os.Setenv("GOTWI_API_KEY", cfg.twitterApiKey)
-		logrus.Infof("Loading Twitter API Key: %s", cfg.twitterApiKey)
+		logrus.Infof(" --> Loading Twitter API Key: %s", cfg.twitterApiKey)
 	}
 
 	cfg.twitterApiKeySecret = os.Getenv(twitter.EnvironmentalVariableTwitterAPIKeySecret)
 	if cfg.twitterApiKey != "" {
 		os.Setenv("GOTWI_API_KEY_SECRET", cfg.twitterApiKeySecret)
-		logrus.Infof("Loading Twitter API Key Secret: **********")
+		logrus.Infof(" --> Loading Twitter API Key Secret: **********")
 	}
 
 	cfg.twitterAccessToken = os.Getenv(twitter.EnvironmentalVariableTwitterAccessToken)
 	if cfg.twitterAccessToken != "" {
-		logrus.Infof("Loading Twiter Access Token: %s", cfg.twitterAccessToken)
+		logrus.Infof(" --> Loading Twiter Access Token: **********")
 	}
 
 	cfg.twitterAccessTokenSecret = os.Getenv(twitter.EnvironmentalVariableTwitterAccessTokenSecret)
 	if cfg.twitterApiKeySecret != "" {
-		logrus.Infof("Loading Twiter Access Token Secret: **********")
+		logrus.Infof(" --> Loading Twiter Access Token Secret: **********")
+	}
+
+	cfg.mastodonServer = os.Getenv(mastodon.EnvironmentalVariableMastodonServer)
+	if cfg.mastodonServer != "" {
+		logrus.Infof(" --> Loading Mastodon Server: %s", cfg.mastodonServer)
+	}
+
+	cfg.mastodonClientID = os.Getenv(mastodon.EnvironmentalVariableMastodonClientID)
+	if cfg.mastodonClientID != "" {
+		logrus.Infof(" --> Loading Mastodon Client ID: %s", cfg.mastodonClientID)
+	}
+
+	cfg.mastodonClientSecret = os.Getenv(mastodon.EnvironmentalVariableMastodonClientSecret)
+	if cfg.mastodonClientSecret != "" {
+		logrus.Infof(" --> Loading Mastodon Client Secret: **********")
+	}
+
+	cfg.mastodonUsername = os.Getenv(mastodon.EnvironmentalVariableMastodonUsername)
+	if cfg.mastodonUsername != "" {
+		logrus.Infof(" --> Loading Mastodon Username: %s", cfg.mastodonUsername)
+	}
+
+	cfg.mastodonPassword = os.Getenv(mastodon.EnvironmentalVariableMastodonPassword)
+	if cfg.mastodonPassword != "" {
+		logrus.Infof(" --> Loading Mastodon Password: **********")
 	}
 }
 

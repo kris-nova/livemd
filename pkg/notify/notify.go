@@ -17,11 +17,13 @@
 package notify
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/chimeracoder/anaconda"
+	"github.com/mattn/go-mastodon"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,15 +36,19 @@ const (
 	// integrations, and therefore sets the bar.
 	MessageSizeLimit int = 280
 
-	EnableDiscordSend bool = false
-	EnableTwitterSend bool = false
+	EnableDiscordSend  bool = false
+	EnableTwitterSend  bool = false
+	EnableMastodonSend bool = true
 )
 
 type Notifier struct {
-	Message        string
-	Discord        *discordgo.Session
-	discordChannel string
-	Twitter        *anaconda.TwitterApi
+	Message          string
+	Discord          *discordgo.Session
+	discordChannel   string
+	mastodonUsername string
+	mastodonServer   string
+	Twitter          *anaconda.TwitterApi
+	Mastodon         *mastodon.Client
 }
 
 func New(message string) *Notifier {
@@ -59,6 +65,9 @@ func New(message string) *Notifier {
 // The bot must be linked to a specific server which can be done via:
 //   https://discord.com/oauth2/authorize?client_id=YOUR_ID_HERE&scope=bot&permissions=2048
 func (n *Notifier) EnableDiscord(token string, channel string) error {
+	if !EnableDiscordSend {
+		return nil
+	}
 	session, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return fmt.Errorf("unable to enable discord intergration: %v", err)
@@ -75,6 +84,9 @@ func (n *Notifier) EnableDiscord(token string, channel string) error {
 }
 
 func (n *Notifier) EnableTwitter(accessToken, accessTokenSecret, consumerKey, consumerKeySecret string) error {
+	if !EnableTwitterSend {
+		return nil
+	}
 	if accessToken == "" {
 		return fmt.Errorf("empty accessToken")
 	}
@@ -94,6 +106,23 @@ func (n *Notifier) EnableTwitter(accessToken, accessTokenSecret, consumerKey, co
 	}
 	n.Twitter = twitter
 	logrus.Infof("Twitter authenticated! User: %s", self.Name)
+	return nil
+}
+
+func (n *Notifier) EnableMastodon(server, user, pass, clientID, clientSecret string) error {
+	client := mastodon.NewClient(&mastodon.Config{
+		Server:       server,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+	})
+	err := client.Authenticate(context.Background(), user, pass)
+	if err != nil {
+		return fmt.Errorf("unable to enable mastodon integration: %v", err)
+	}
+	logrus.Infof("Mastodon authenticated! User: %s", user)
+	n.Mastodon = client
+	n.mastodonUsername = user
+	n.mastodonServer = server
 	return nil
 }
 
@@ -123,6 +152,20 @@ func (n *Notifier) Notify() error {
 		} else {
 			logrus.Info("Twitter: Sent!")
 			logrus.Info("https://twitter.com/%s/status/%s", tweet.User.Name, tweet.IdStr)
+		}
+	}
+
+	// Mastodon
+	if n.Mastodon != nil && EnableMastodonSend {
+		logrus.Info("Mastodon: Dispatching...")
+		status, err := n.Mastodon.PostStatus(context.TODO(), &mastodon.Toot{
+			Status: n.Message,
+		})
+		if err != nil {
+			logrus.Warningf("Mastodon notification failure: %v", err)
+		} else {
+			logrus.Info("Mastodon: Sent!")
+			logrus.Info(status.URL)
 		}
 	}
 
