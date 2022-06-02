@@ -135,6 +135,20 @@ func (n *Notifier) EnableMastodon(server, accessToken, clientID, clientSecret, u
 	if err != nil {
 		return fmt.Errorf("unable to enable mastodon integration: %v", err)
 	}
+
+	fmt.Println(client)
+
+	client = &madon.Client{
+		Name:        "Hachyderm.io",
+		ID:          clientID,
+		Secret:      clientSecret,
+		APIBase:     "",
+		InstanceURL: "https://hachyderm.io",
+		UserToken:   nil,
+	}
+
+	fmt.Println(client)
+
 	err = client.LoginBasic(user, pass, []string{"read", "write", "follow"})
 	if err != nil {
 		return fmt.Errorf("unable to enable mastodon integration: %v", err)
