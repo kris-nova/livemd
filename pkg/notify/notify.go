@@ -75,7 +75,6 @@ func (n *Notifier) Notify() error {
 	// Discord
 	if n.Discord != nil {
 		logrus.Info("Discord: Dispatching...")
-		n.Discord.Identify.Intents = 2048
 		_, err := n.Discord.ChannelMessageSend(n.discordChannel, n.Message)
 		if err != nil {
 			logrus.Warningf("Discord notification failure: %v", err)
