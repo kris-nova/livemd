@@ -54,11 +54,11 @@ type AppOptions struct {
 	discordToken   string
 	discordChannel string
 
-	twitterApiKey       string
-	twitterApiKeySecret string
-	twitterBearerToken  string
-	twitterClientID     string
-	twitterClientSecret string
+	twitterApiKey            string
+	twitterApiKeySecret      string
+	twitterBearerToken       string
+	twitterAccessToken       string
+	twitterAccessTokenSecret string
 }
 
 // # Edit ./live.md
@@ -111,17 +111,13 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					if cfg.discordToken != "" {
 						err = notifier.EnableDiscord(cfg.discordToken, cfg.discordChannel)
 						if err != nil {
-							return fmt.Errorf("invalid discord token: %v", err)
-						} else {
-							logrus.Infof("Discord: Enabled")
+							return fmt.Errorf("failed enabling discord: %v", err)
 						}
 					}
-					if cfg.twitterBearerToken != "" {
-						err = notifier.EnableTwitter(cfg.twitterClientID, cfg.twitterClientSecret)
+					if cfg.twitterApiKeySecret != "" {
+						err = notifier.EnableTwitter(cfg.twitterAccessToken, cfg.twitterAccessTokenSecret, cfg.twitterApiKey, cfg.twitterApiKeySecret)
 						if err != nil {
-							return fmt.Errorf("invalid discord token: %v", err)
-						} else {
-							logrus.Infof("Twitter: Enabled")
+							return fmt.Errorf("failed enabling twitter: %v", err)
 						}
 					}
 
@@ -312,24 +308,26 @@ func Preloader() {
 		logrus.Infof("Loading Discord Channel: %s", cfg.discordChannel)
 	}
 
-	cfg.twitterBearerToken = os.Getenv(twitter.EnvironmentalVariableTwitterBearerToken)
-	if cfg.twitterBearerToken != "" {
-		logrus.Infof("Loading Twiter Bearer Token: **********")
-	}
-
 	cfg.twitterApiKey = os.Getenv(twitter.EnvironmentalVariableTwitterAPIKey)
 	if cfg.twitterApiKey != "" {
+		os.Setenv("GOTWI_API_KEY", cfg.twitterApiKey)
 		logrus.Infof("Loading Twitter API Key: %s", cfg.twitterApiKey)
 	}
 
-	cfg.twitterClientID = os.Getenv(twitter.EnvironmentalVariableTwitterClientID)
-	if cfg.twitterClientID != "" {
-		logrus.Infof("Loading Twiter Client ID: %s", cfg.twitterClientID)
+	cfg.twitterApiKeySecret = os.Getenv(twitter.EnvironmentalVariableTwitterAPIKeySecret)
+	if cfg.twitterApiKey != "" {
+		os.Setenv("GOTWI_API_KEY_SECRET", cfg.twitterApiKeySecret)
+		logrus.Infof("Loading Twitter API Key Secret: **********")
 	}
 
-	cfg.twitterClientSecret = os.Getenv(twitter.EnvironmentalVariableTwitterClientSecret)
+	cfg.twitterAccessToken = os.Getenv(twitter.EnvironmentalVariableTwitterAccessToken)
+	if cfg.twitterAccessToken != "" {
+		logrus.Infof("Loading Twiter Access Token: %s", cfg.twitterAccessToken)
+	}
+
+	cfg.twitterAccessTokenSecret = os.Getenv(twitter.EnvironmentalVariableTwitterAccessTokenSecret)
 	if cfg.twitterApiKeySecret != "" {
-		logrus.Infof("Loading Twiter Client Secret: Loading Twiter Client Secret: **********")
+		logrus.Infof("Loading Twiter Access Token Secret: **********")
 	}
 }
 

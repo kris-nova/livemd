@@ -17,10 +17,9 @@
 package twitter
 
 const (
-	EnvironmentalVariableTwitterClientID     string = "LIVE_TWITTER_CLIENT_ID"
-	EnvironmentalVariableTwitterClientSecret string = "LIVE_TWITTER_CLIENT_SECRET"
+	EnvironmentalVariableTwitterAccessToken       string = "LIVE_TWITTER_ACCESS_TOKEN"
+	EnvironmentalVariableTwitterAccessTokenSecret string = "LIVE_TWITTER_ACCESS_TOKEN_SECRET"
 
-	EnvironmentalVariableTwitterBearerToken  string = "LIVE_TWITTER_BEARER_TOKEN"
 	EnvironmentalVariableTwitterAPIKey       string = "LIVE_TWITTER_API_KEY"
 	EnvironmentalVariableTwitterAPIKeySecret string = "LIVE_TWITTER_API_KEY_SECRET"
 )

@@ -17,14 +17,11 @@
 package notify
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/michimani/gotwi/tweet/managetweet/types"
+	"net/url"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/michimani/gotwi"
-	"github.com/michimani/gotwi/tweet/managetweet"
+	"github.com/chimeracoder/anaconda"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,15 +34,15 @@ const (
 	// integrations, and therefore sets the bar.
 	MessageSizeLimit int = 280
 
-	// TwitterName is the name to use for generating the URL in the logs
-	TwitterName = "krisnova"
+	EnableDiscordSend bool = false
+	EnableTwitterSend bool = false
 )
 
 type Notifier struct {
 	Message        string
 	Discord        *discordgo.Session
-	Twitter        *gotwi.Client
 	discordChannel string
+	Twitter        *anaconda.TwitterApi
 }
 
 func New(message string) *Notifier {
@@ -77,22 +74,26 @@ func (n *Notifier) EnableDiscord(token string, channel string) error {
 	return nil
 }
 
-func (n *Notifier) EnableTwitter(clientID, clientSecret string) error {
-	twitter, err := gotwi.NewClient(&gotwi.NewClientInput{
-		AuthenticationMethod: gotwi.AuthenMethodOAuth1UserContext,
-		OAuthToken:           clientID,
-		OAuthTokenSecret:     clientSecret,
-	})
+func (n *Notifier) EnableTwitter(accessToken, accessTokenSecret, consumerKey, consumerKeySecret string) error {
+	if accessToken == "" {
+		return fmt.Errorf("empty accessToken")
+	}
+	if accessTokenSecret == "" {
+		return fmt.Errorf("empty accessTokenSecret")
+	}
+	if consumerKey == "" {
+		return fmt.Errorf("empty consumerKey")
+	}
+	if consumerKeySecret == "" {
+		return fmt.Errorf("empty consumerKeySecret")
+	}
+	twitter := anaconda.NewTwitterApiWithCredentials(accessToken, accessTokenSecret, consumerKey, consumerKeySecret)
+	self, err := twitter.GetSelf(url.Values{})
 	if err != nil {
 		return fmt.Errorf("unable to enable twitter integration: %v", err)
 	}
 	n.Twitter = twitter
-	if clientID == "" {
-		return fmt.Errorf("empty twitter clientID")
-	}
-	if clientSecret == "" {
-		return fmt.Errorf("empty twitter clientSecret")
-	}
+	logrus.Infof("Twitter authenticated! User: %s", self.Name)
 	return nil
 }
 
@@ -103,7 +104,7 @@ func (n *Notifier) Notify() error {
 	}
 
 	// Discord
-	if n.Discord != nil {
+	if n.Discord != nil && EnableDiscordSend {
 		logrus.Info("Discord: Dispatching...")
 		_, err := n.Discord.ChannelMessageSend(n.discordChannel, n.Message)
 		if err != nil {
@@ -114,16 +115,14 @@ func (n *Notifier) Notify() error {
 	}
 
 	// Twitter
-	if n.Twitter != nil {
+	if n.Twitter != nil && EnableTwitterSend {
 		logrus.Info("Twitter: Dispatching...")
-		res, err := managetweet.Create(context.TODO(), n.Twitter, &types.CreateInput{
-			Text: gotwi.String(n.Message),
-		})
+		tweet, err := n.Twitter.PostTweet(n.Message, url.Values{})
 		if err != nil {
 			logrus.Warningf("Twitter notification failure: %v", err)
 		} else {
 			logrus.Info("Twitter: Sent!")
-			logrus.Info("https://twitter.com/%s/status/", TwitterName, res.Data.ID)
+			logrus.Info("https://twitter.com/%s/status/%s", tweet.User.Name, tweet.IdStr)
 		}
 	}
 
