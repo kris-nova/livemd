@@ -119,6 +119,13 @@ Options
 				},
 			},
 			{
+				//
+				// [live stream]
+				//
+				// This subcommand will only mutate local text.
+				// By design this subcommand will NEVER reach out
+				// to interface with other APIs.
+				//
 				Name:        "stream",
 				Aliases:     []string{"s"},
 				Usage:       "Manage local live stream records.",
@@ -126,22 +133,19 @@ Options
 				Description: "Use this command to manage local records.",
 				Subcommands: []*cli.Command{
 					{
-						Name:        "push",
-						Usage:       "Push up the local livemd.md",
-						UsageText:   "live stream <title>",
+						Name:        "new",
+						Usage:       "Create a new local state file.",
+						UsageText:   "live stream new <title>",
 						Description: "Use this sync from remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
-						Action: func(c *cli.Context) error { //
-							return nil
-						},
-					},
-					{
-						Name:        "pull",
-						Usage:       "Pull down to the local livemd.md",
-						UsageText:   "live stream <title>",
-						Description: "Use this command to overwrite remote.",
-						Flags:       GlobalFlags([]cli.Flag{}),
 						Action: func(c *cli.Context) error {
+
+							// Check if state file exists
+							if FileExists(cfg.filename) {
+								return fmt.Errorf("file [%s] exists", cfg.filename)
+							}
+							logrus.Infof("Creating new state: %s", cfg.filename)
+
 							return nil
 						},
 					},
@@ -201,4 +205,12 @@ func GlobalFlags(c []cli.Flag) []cli.Flag {
 		c = append(c, gf)
 	}
 	return c
+}
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return true
 }
