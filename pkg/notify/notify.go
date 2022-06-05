@@ -17,8 +17,10 @@
 package notify
 
 import (
+	"bufio"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/McKael/madon"
 	"github.com/bwmarrin/discordgo"
@@ -131,28 +133,28 @@ func (n *Notifier) EnableMastodon(server, accessToken, clientID, clientSecret, u
 	fmt.Println("Client Secret: ", clientSecret)
 	fmt.Println("Access Token: ", accessToken)
 
-	client, err := madon.RestoreApp("Live", "Hachyderm.io", clientID, clientSecret, nil)
+	//client, err := madon.RestoreApp("Live", "hachyderm.io", clientID, clientSecret, nil)
+	//if err != nil {
+	//	return fmt.Errorf("unable to enable mastodon integration: %v", err)
+	//}
+	client, err := madon.NewApp("Live", "https://hachyderm.io", []string{"read", "write", "follow"}, "urn:ietf:wg:oauth:2.0:oob", "https://hachyderm.io")
 	if err != nil {
 		return fmt.Errorf("unable to enable mastodon integration: %v", err)
 	}
 
-	fmt.Println(client)
-
-	client = &madon.Client{
-		Name:        "Hachyderm.io",
-		ID:          clientID,
-		Secret:      clientSecret,
-		APIBase:     "",
-		InstanceURL: "https://hachyderm.io",
-		UserToken:   nil,
-	}
-
-	fmt.Println(client)
-
-	err = client.LoginBasic(user, pass, []string{"read", "write", "follow"})
+	redirect, err := client.LoginOAuth2("", []string{"read", "write", "follow"})
 	if err != nil {
-		return fmt.Errorf("unable to enable mastodon integration: %v", err)
+		return fmt.Errorf("unable to enable mastodon login: %v", err)
 	}
+	logrus.Infof("%s", redirect)
+	fmt.Print("Press any key to continue...")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
+
+	//err = client.LoginBasic(user, pass, []string{"read", "write", "follow"})
+	//if err != nil {
+	//	return fmt.Errorf("unable to enable mastodon integration: %v", err)
+	//}
+	logrus.Info("New app created!")
 	n.Mastodon = client
 
 	//client := mastodon.NewClient(&mastodon.Config{
