@@ -45,6 +45,20 @@ func main() {
 		Aliases: []string{"V"},
 		Usage:   "The version of the program.",
 	}
+
+	cli.AppHelpTemplate = fmt.Sprintf(`%s
+{{.Usage}}
+
+Commands{{range .VisibleCategories}}{{if .Name}}
+   {{.Name}}:{{range .VisibleCommands}}
+     {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{else}}{{range .VisibleCommands}}
+   {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{end}}{{end}}
+
+Options
+   {{range .VisibleFlags}}{{.}}
+   {{end}}
+`, livemd.Banner())
+
 	app := &cli.App{
 		Name:     "live",
 		Version:  livemd.Version,
@@ -57,9 +71,7 @@ func main() {
 		},
 		Copyright: livemd.Copyright,
 		HelpName:  livemd.Name,
-		Usage:     "Collaborative live stream CLI tool writte by Kris Nóva.",
-		UsageText: `live <cmd> <options> 
-Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
+		Usage:     "Centralized live streaming meta data in markdown.",
 		Commands: []*cli.Command{
 			{
 				Name:      "notification",
@@ -138,8 +150,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 				Action: func(c *cli.Context) error {
 					title := c.Args().Get(0)
 					if title == "" {
-						fmt.Println(livemd.Banner())
-						cli.ShowSubcommandHelp(c)
+						cli.ShowAppHelp(c)
 						return nil
 					}
 
@@ -149,8 +160,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 		},
 		Flags: GlobalFlags([]cli.Flag{}),
 		Action: func(c *cli.Context) error {
-			fmt.Println(livemd.Banner())
-			cli.ShowSubcommandHelp(c)
+			cli.ShowAppHelp(c)
 			return nil
 		},
 	}
