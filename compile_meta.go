@@ -30,14 +30,14 @@ var (
 func Banner() string {
 	var banner string
 	banner += fmt.Sprintf("\n")
-	banner += fmt.Sprintf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n")
-	banner += fmt.Sprintf(" ┃   ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗  ┃\n")
-	banner += fmt.Sprintf(" ┃   ████╗  ██║██╔═████╗██║   ██║██╔══██╗ ┃\n")
-	banner += fmt.Sprintf(" ┃   ██╔██╗ ██║██║██╔██║██║   ██║███████║ ┃\n")
-	banner += fmt.Sprintf(" ┃   ██║╚██╗██║████╔╝██║╚██╗ ██╔╝██╔══██║ ┃\n")
-	banner += fmt.Sprintf(" ┃   ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║ ┃\n")
-	banner += fmt.Sprintf(" ┃   ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝ ┃\n")
-	banner += fmt.Sprintf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n")
+	banner += fmt.Sprintf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n")
+	banner += fmt.Sprintf(" ┃ ██╗     ██╗██╗   ██╗███████╗███╗   ███╗██████╗  ┃\n")
+	banner += fmt.Sprintf(" ┃ ██║     ██║██║   ██║██╔════╝████╗ ████║██╔══██╗ ┃\n")
+	banner += fmt.Sprintf(" ┃ ██║     ██║██║   ██║█████╗  ██╔████╔██║██║  ██║ ┃\n")
+	banner += fmt.Sprintf(" ┃ ██║     ██║╚██╗ ██╔╝██╔══╝  ██║╚██╔╝██║██║  ██║ ┃\n")
+	banner += fmt.Sprintf(" ┃ ███████╗██║ ╚████╔╝ ███████╗██║ ╚═╝ ██║██████╔╝ ┃\n")
+	banner += fmt.Sprintf(" ┃ ╚══════╝╚═╝  ╚═══╝  ╚══════╝╚═╝     ╚═╝╚═════╝  ┃\n")
+	banner += fmt.Sprintf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n")
 	banner += fmt.Sprintf(" Created by: %s <%s>\n", AuthorName, AuthorEmail)
 	return banner
 }
