@@ -38,6 +38,13 @@ type AppOptions struct {
 	filename string
 }
 
+var strm = &StreamOptions{}
+
+type StreamOptions struct {
+	notify      string
+	description string
+}
+
 func main() {
 	/* Change version to -V */
 	cli.VersionFlag = &cli.BoolFlag{
@@ -47,6 +54,19 @@ func main() {
 	}
 
 	cli.AppHelpTemplate = fmt.Sprintf(`%s
+{{.Usage}}
+
+Commands{{range .VisibleCategories}}{{if .Name}}
+   {{.Name}}:{{range .VisibleCommands}}
+     {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{else}}{{range .VisibleCommands}}
+   {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{end}}{{end}}
+
+Options
+   {{range .VisibleFlags}}{{.}}
+   {{end}}
+`, livemd.Banner())
+
+	cli.SubcommandHelpTemplate = fmt.Sprintf(`%s
 {{.Usage}}
 
 Commands{{range .VisibleCategories}}{{if .Name}}
@@ -136,17 +156,59 @@ Options
 						Name:        "new",
 						Usage:       "Create a new local state file.",
 						UsageText:   "live stream new <title>",
-						Description: "Use this sync from remote.",
-						Flags:       GlobalFlags([]cli.Flag{}),
+						Description: "Use this to create a new state file.",
+						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
 						Action: func(c *cli.Context) error {
+							title := c.Args().Get(0)
+							if title == "" {
+								cli.ShowSubcommandHelp(c)
+								return nil
+							}
 
 							// Check if state file exists
 							if FileExists(cfg.filename) {
 								return fmt.Errorf("file [%s] exists", cfg.filename)
 							}
 							logrus.Infof("Creating new state: %s", cfg.filename)
+							l := livemd.New(cfg.filename)
+							l.Title = title
+							if strm.notify != "" {
+								logrus.Infof("Setting notification string: %s", strm.notify)
+								l.Notify = strm.notify
+							}
+							if strm.description != "" {
+								logrus.Infof("Setting description string: %s", strm.notify)
+								l.Notify = strm.description
+							}
+							return l.Write()
+						},
+					},
+					{
+						Name:        "update",
+						Usage:       "Update fields in a local state file",
+						UsageText:   "live stream update {fields}",
+						Description: "Use this to update an existing state file.",
+						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
+						Action: func(c *cli.Context) error {
 
-							return nil
+							// Check if state file exists
+							if !FileExists(cfg.filename) {
+								return fmt.Errorf("file [%s] can not be found", cfg.filename)
+							}
+							logrus.Infof("Updating state: %s", cfg.filename)
+							l, err := livemd.Load(cfg.filename)
+							if err != nil {
+								return fmt.Errorf("file [%s] can not be loaded: %v", cfg.filename, err)
+							}
+							if strm.notify != "" {
+								logrus.Infof("Setting notification string: %s", strm.notify)
+								l.Notify = strm.notify
+							}
+							if strm.description != "" {
+								logrus.Infof("Setting description string: %s", strm.notify)
+								l.Notify = strm.description
+							}
+							return l.Write()
 						},
 					},
 				},
@@ -185,6 +247,27 @@ Options
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+func StreamFlags(c []cli.Flag) []cli.Flag {
+	g := []cli.Flag{
+		&cli.StringFlag{
+			Name:        "notify",
+			Aliases:     []string{"n"},
+			Destination: &strm.notify,
+			Value:       "",
+		},
+		&cli.StringFlag{
+			Name:        "description",
+			Aliases:     []string{"d"},
+			Destination: &strm.notify,
+			Value:       "",
+		},
+	}
+	for _, gf := range g {
+		c = append(c, gf)
+	}
+	return c
 }
 
 func GlobalFlags(c []cli.Flag) []cli.Flag {

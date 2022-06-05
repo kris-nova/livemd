@@ -35,7 +35,6 @@ type LiveMD struct {
 	// path is the coupling to a local file on disk.
 	path string
 
-	// Title is the title of the show
 	Title       string
 	Notify      string
 	Description string
@@ -67,6 +66,7 @@ func (l *LiveMD) Write() error {
 
 // Render will render the markdown and return the content
 func (l *LiveMD) Render() ([]byte, error) {
+
 	var rawMarkdown []byte
 
 	// Build the raw markdown from the template

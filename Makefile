@@ -47,6 +47,7 @@ test: clean compile install ## 🤓 Run go tests
 clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."
 	rm -rvf release/*
+	rm -vf live.md
 
 .PHONY: release
 release: ## Make the binaries for a GitHub release 📦
