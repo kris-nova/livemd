@@ -1,4 +1,4 @@
-module github.com/kris-nova/live
+module github.com/kris-nova/livemd
 
 go 1.18
 
@@ -6,6 +6,7 @@ require (
 	github.com/McKael/madon v2.3.0+incompatible
 	github.com/bwmarrin/discordgo v0.25.0
 	github.com/chimeracoder/anaconda v2.0.0+incompatible
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.4.1
 )

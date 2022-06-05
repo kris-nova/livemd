@@ -23,21 +23,20 @@ import (
 	"os"
 	"time"
 
-	"github.com/kris-nova/live/pkg/twitter"
+	"github.com/kris-nova/livemd"
 
-	"github.com/kris-nova/live/pkg/mastodon"
+	"github.com/kris-nova/livemd/pkg/twitter"
 
-	"github.com/kris-nova/live/pkg/notify"
+	"github.com/kris-nova/livemd/pkg/mastodon"
 
-	"github.com/kris-nova/live/pkg/discord"
+	"github.com/kris-nova/livemd/pkg/notify"
 
-	"github.com/kris-nova/live/pkg/embedmd"
+	"github.com/kris-nova/livemd/pkg/discord"
 
-	"github.com/kris-nova/live/pkg/hackmd"
+	"github.com/kris-nova/livemd/pkg/embedmd"
 
-	"github.com/kris-nova/live/pkg/livemd"
+	"github.com/kris-nova/livemd/pkg/hackmd"
 
-	"github.com/kris-nova/live"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -72,7 +71,7 @@ type AppOptions struct {
 	mastodonServer       string
 }
 
-// # Edit ./live.md
+// # Edit ./livemd.md
 // live stream <title>    # Create a new live stream (hackmd)
 // live stream push       # Sync local changes to hackmd
 // live stream pull       # Overwrite local changes to hackmd
@@ -91,16 +90,16 @@ func main() {
 	}
 	app := &cli.App{
 		Name:     "live",
-		Version:  live.Version,
+		Version:  livemd.Version,
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
-				Name:  live.AuthorName,
-				Email: live.AuthorEmail,
+				Name:  livemd.AuthorName,
+				Email: livemd.AuthorEmail,
 			},
 		},
-		Copyright: live.Copyright,
-		HelpName:  live.Name,
+		Copyright: livemd.Copyright,
+		HelpName:  livemd.Name,
 		Usage:     "Collaborative live stream CLI tool writte by Kris Nóva.",
 		UsageText: `live <cmd> <options> 
 Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
@@ -113,7 +112,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 				Action: func(c *cli.Context) error {
 					message := c.Args().Get(0)
 					if message == "" {
-						fmt.Println(live.Banner())
+						fmt.Println(livemd.Banner())
 						cli.ShowSubcommandHelp(c)
 						return nil
 					}
@@ -158,7 +157,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 				Subcommands: []*cli.Command{
 					{
 						Name:        "push",
-						Usage:       "Push up the local live.md",
+						Usage:       "Push up the local livemd.md",
 						UsageText:   "live stream <title>",
 						Description: "Use this sync from remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
@@ -191,7 +190,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 					},
 					{
 						Name:        "pull",
-						Usage:       "Pull down to the local live.md",
+						Usage:       "Pull down to the local livemd.md",
 						UsageText:   "live stream <title>",
 						Description: "Use this command to overwrite remote.",
 						Flags:       GlobalFlags([]cli.Flag{}),
@@ -242,7 +241,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 				Action: func(c *cli.Context) error {
 					title := c.Args().Get(0)
 					if title == "" {
-						fmt.Println(live.Banner())
+						fmt.Println(livemd.Banner())
 						cli.ShowSubcommandHelp(c)
 						return nil
 					}
@@ -276,7 +275,7 @@ Use this program to perform tasks with Twitch, Hackmd, and YouTube.`,
 		},
 		Flags: GlobalFlags([]cli.Flag{}),
 		Action: func(c *cli.Context) error {
-			fmt.Println(live.Banner())
+			fmt.Println(livemd.Banner())
 			cli.ShowSubcommandHelp(c)
 			return nil
 		},
