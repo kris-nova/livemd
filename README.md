@@ -37,5 +37,7 @@ The `notify` string is a 280 character string that is used to notify various ser
 live stream update --notify "Had a rough night. Come watch me live. Exclusively on @Twitch. https://twitch.tv/krisnova"
 ```
 
+The `description` string
+
 
 
