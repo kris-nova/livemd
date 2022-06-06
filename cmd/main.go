@@ -18,9 +18,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/kris-nova/livemd/pkg/hackmd"
 
 	"github.com/kris-nova/livemd"
 
@@ -143,6 +146,85 @@ Options
 			},
 			{
 				//
+				// [live hackmd]
+				//
+				Name:        "hackmd",
+				Aliases:     []string{"h"},
+				Usage:       "Manage local file sync with hackmd.",
+				UsageText:   "live hackmd [commmand] [options]",
+				Description: "Use this command to manage local state files with hackmd.",
+				Subcommands: []*cli.Command{
+					{
+						Name:        "push",
+						Usage:       "Push to remote.",
+						UsageText:   "live hackmd push [options]",
+						Description: "Use this to overwrite remote with local.",
+						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
+						Action: func(c *cli.Context) error {
+							// Check if state file exists
+							if !livemd.FileExists(cfg.filename) {
+								return fmt.Errorf("file [%s] can not be found", cfg.filename)
+							}
+							l, err := livemd.Load(cfg.filename)
+							if err != nil {
+								return fmt.Errorf("file [%s] can not be loaded: %v", cfg.filename, err)
+							}
+
+							// Client
+							if auth.hackmdToken == "" {
+								return fmt.Errorf("empty token")
+							}
+							if auth.hackmdID == "" {
+								return fmt.Errorf("empty hackmd id")
+							}
+							client := hackmd.New(auth.hackmdToken)
+							_, err = client.GetNote(auth.hackmdID)
+							if err != nil {
+								return fmt.Errorf("unable to find note: %s: %v", auth.hackmdID, err)
+							}
+							note, err := livemd.ToNote(l, auth.hackmdID)
+							if err != nil {
+								return fmt.Errorf("unable to translate to note: %v", err)
+							}
+							_, err = client.UpdateNote(note)
+							if err != nil {
+								return err
+							}
+							logrus.Infof("Updated remote: https://hackmd.io/%s", auth.hackmdID)
+							return nil
+						},
+					},
+					{
+						Name:        "pull",
+						Usage:       "Pull from remote.",
+						UsageText:   "live hackmd pull [options]",
+						Description: "Use this to overwrite local with remote.",
+						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
+						Action: func(c *cli.Context) error {
+							// Client
+							if auth.hackmdToken == "" {
+								return fmt.Errorf("empty token")
+							}
+							if auth.hackmdID == "" {
+								return fmt.Errorf("empty hackmd id")
+							}
+							client := hackmd.New(auth.hackmdToken)
+							note, err := client.GetNote(auth.hackmdID)
+							if err != nil {
+								return fmt.Errorf("unable to find note: %s: %v", auth.hackmdID, err)
+							}
+							err = ioutil.WriteFile(cfg.filename, []byte(note.Content), livemd.DefaultMode)
+							if err != nil {
+								return err
+							}
+							logrus.Infof("Updated local: %s", cfg.filename)
+							return nil
+						},
+					},
+				},
+			},
+			{
+				//
 				// [live stream]
 				//
 				// This subcommand will only mutate local text.
@@ -170,7 +252,7 @@ Options
 							}
 
 							// Check if state file exists
-							if FileExists(cfg.filename) {
+							if livemd.FileExists(cfg.filename) {
 								return fmt.Errorf("file [%s] exists", cfg.filename)
 							}
 							logrus.Infof("Creating new state: %s", cfg.filename)
@@ -196,7 +278,7 @@ Options
 						Action: func(c *cli.Context) error {
 
 							// Check if state file exists
-							if !FileExists(cfg.filename) {
+							if !livemd.FileExists(cfg.filename) {
 								return fmt.Errorf("file [%s] can not be found", cfg.filename)
 							}
 							logrus.Infof("Updating state: %s", cfg.filename)
@@ -231,7 +313,7 @@ Options
 						Action: func(c *cli.Context) error {
 
 							// Check if state file exists
-							if !FileExists(cfg.filename) {
+							if !livemd.FileExists(cfg.filename) {
 								return fmt.Errorf("file [%s] can not be found", cfg.filename)
 							}
 							l, err := livemd.Load(cfg.filename)
@@ -245,7 +327,7 @@ Options
 							// By design this should NEVER l.Write()
 							// We can use the variables defined in l
 							// However we should NEVER mutate the source during an archive!
-							return MoveFile(cfg.filename, writeFile)
+							return livemd.MoveFile(cfg.filename, writeFile)
 						},
 					},
 				},
@@ -325,17 +407,4 @@ func GlobalFlags(c []cli.Flag) []cli.Flag {
 		c = append(c, gf)
 	}
 	return c
-}
-
-func FileExists(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-// MoveFile is primarily used for Archiving.
-func MoveFile(src, dst string) error {
-	return os.Rename(src, dst)
 }

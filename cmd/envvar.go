@@ -49,7 +49,13 @@ var (
 			Name:        "LIVE_HACKMD_TOKEN",
 			Value:       "",
 			Destination: &auth.hackmdToken,
-			Required:    false,
+			Required:    true,
+		},
+		{
+			Name:        "LIVE_HACKMD_ID",
+			Value:       "",
+			Destination: &auth.hackmdID,
+			Required:    true,
 		},
 	}
 )

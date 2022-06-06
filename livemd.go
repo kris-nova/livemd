@@ -21,10 +21,13 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/kris-nova/livemd/pkg"
+
+	"github.com/kris-nova/livemd/pkg/hackmd"
 
 	"github.com/kris-nova/livemd/pkg/embedmd"
 )
@@ -84,21 +87,28 @@ func (l *LiveMD) CoalesceDateName() string {
 
 // Render will render the markdown and return the content
 func (l *LiveMD) Render() ([]byte, error) {
-
 	var rawMarkdown []byte
-
-	// Build the raw markdown from the template
-	tpl := template.New(l.path)
-	tpl, err := tpl.Parse(pkg.MarkdownTemplate)
-	if err != nil {
-		return []byte(""), fmt.Errorf("unable to parse template: %v", err)
+	if !FileExists(l.path) {
+		// Build the raw markdown from the template
+		tpl := template.New(l.path)
+		tpl, err := tpl.Parse(pkg.MarkdownTemplate)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to parse template: %v", err)
+		}
+		buf := &bytes.Buffer{}
+		err = tpl.Execute(buf, l)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to execute template: %v", err)
+		}
+		rawMarkdown = buf.Bytes()
+	} else {
+		// Read the raw markdown from the filesystem
+		readBytes, err := ioutil.ReadFile(l.path)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to read markdown: %v", err)
+		}
+		rawMarkdown = readBytes
 	}
-	buf := &bytes.Buffer{}
-	err = tpl.Execute(buf, l)
-	if err != nil {
-		return []byte(""), fmt.Errorf("unable to execute template: %v", err)
-	}
-	rawMarkdown = buf.Bytes()
 
 	// RecordV will record *l directly into rawMarkdown
 	return embedmd.RecordV(rawMarkdown, l)
@@ -109,4 +119,34 @@ func Load(path string) (*LiveMD, error) {
 	x := New(path)
 	err := x.Read()
 	return x, err
+}
+
+func ToNote(l *LiveMD, id string) (*hackmd.Note, error) {
+	data, err := l.Render()
+	if err != nil {
+		return nil, err
+	}
+	note := &hackmd.Note{
+		Title:   l.Title,
+		ID:      id,
+		Content: string(data),
+	}
+	return note, nil
+}
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+// MoveFile is primarily used for Archiving.
+func MoveFile(src, dst string) error {
+	err := os.Rename(src, dst)
+	if err != nil {
+		return fmt.Errorf("unable to move file. ensure directory exists for destination: %s: %v", dst, err)
+	}
+	return nil
 }
