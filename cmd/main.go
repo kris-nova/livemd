@@ -291,9 +291,10 @@ Options
 								l.Notify = strm.notify
 							}
 							if strm.description != "" {
-								logrus.Infof("Setting description string: %s", strm.notify)
-								l.Notify = strm.description
+								logrus.Infof("Setting description string: %s", strm.description)
+								l.Description = strm.description
 							}
+							logrus.Infof("Updating markdown. Rendering.")
 							return l.Write()
 						},
 					},
@@ -379,7 +380,7 @@ func StreamFlags(c []cli.Flag) []cli.Flag {
 		&cli.StringFlag{
 			Name:        "description",
 			Aliases:     []string{"d"},
-			Destination: &strm.notify,
+			Destination: &strm.description,
 			Value:       "",
 		},
 	}

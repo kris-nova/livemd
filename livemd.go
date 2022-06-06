@@ -43,6 +43,9 @@ type LiveMD struct {
 	Title       string
 	Notify      string
 	Description string
+
+	// Subsystems
+	Twitter string
 }
 
 func New(path string) *LiveMD {
@@ -51,14 +54,14 @@ func New(path string) *LiveMD {
 	}
 }
 
-// Write will first render the markdown, and write the result to the configured path
-func (l *LiveMD) Read() error {
-	rawData, err := ioutil.ReadFile(l.path)
-	if err != nil {
-		return fmt.Errorf("unable to read file: %s: %v", l.path, err)
-	}
-	return embedmd.Unmarshal(rawData, l)
-}
+//// Write will first render the markdown, and write the result to the configured path
+//func (l *LiveMD) Read() error {
+//	rawData, err := ioutil.ReadFile(l.path)
+//	if err != nil {
+//		return fmt.Errorf("unable to read file: %s: %v", l.path, err)
+//	}
+//	return embedmd.Unmarshal(rawData, l)
+//}
 
 // Write will first render the markdown, and write the result to the configured path
 func (l *LiveMD) Write() error {
@@ -85,30 +88,32 @@ func (l *LiveMD) CoalesceDateName() string {
 	return formatted + "__" + title + ".md"
 }
 
-// Render will render the markdown and return the content
+// Read will read from disk exactly, with no mutations.
+func (l *LiveMD) Read() ([]byte, error) {
+	// Read the raw markdown from the filesystem
+	readBytes, err := ioutil.ReadFile(l.path)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to read markdown: %v", err)
+	}
+	return readBytes, nil
+}
+
+// Render will render the markdown and return the content.
+// Render will (by design) always template!
 func (l *LiveMD) Render() ([]byte, error) {
 	var rawMarkdown []byte
-	if !FileExists(l.path) {
-		// Build the raw markdown from the template
-		tpl := template.New(l.path)
-		tpl, err := tpl.Parse(pkg.MarkdownTemplate)
-		if err != nil {
-			return []byte(""), fmt.Errorf("unable to parse template: %v", err)
-		}
-		buf := &bytes.Buffer{}
-		err = tpl.Execute(buf, l)
-		if err != nil {
-			return []byte(""), fmt.Errorf("unable to execute template: %v", err)
-		}
-		rawMarkdown = buf.Bytes()
-	} else {
-		// Read the raw markdown from the filesystem
-		readBytes, err := ioutil.ReadFile(l.path)
-		if err != nil {
-			return []byte(""), fmt.Errorf("unable to read markdown: %v", err)
-		}
-		rawMarkdown = readBytes
+	// Build the raw markdown from the template
+	tpl := template.New(l.path)
+	tpl, err := tpl.Parse(pkg.MarkdownTemplate)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to parse template: %v", err)
 	}
+	buf := &bytes.Buffer{}
+	err = tpl.Execute(buf, l)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to execute template: %v", err)
+	}
+	rawMarkdown = buf.Bytes()
 
 	// RecordV will record *l directly into rawMarkdown
 	return embedmd.RecordV(rawMarkdown, l)
@@ -117,7 +122,11 @@ func (l *LiveMD) Render() ([]byte, error) {
 // Load will attempt to load a *LiveMD from a path
 func Load(path string) (*LiveMD, error) {
 	x := New(path)
-	err := x.Read()
+	data, err := x.Read()
+	if err != nil {
+		return nil, err
+	}
+	err = embedmd.Unmarshal(data, x)
 	return x, err
 }
 

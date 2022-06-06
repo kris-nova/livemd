@@ -1,10 +1,6 @@
 # {{ .Title }}
 
-{{ .Description }}
-
-```
-{{ .Notify }}
-```
+{{ .Description }}{{ if .Twitter }}{{ .Twitter }}{{ end }}
 
 ---
 
