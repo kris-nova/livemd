@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"strings"
+	"time"
 
 	"github.com/kris-nova/livemd/pkg"
 
@@ -62,6 +64,22 @@ func (l *LiveMD) Write() error {
 		return fmt.Errorf("unable to render markdown: %v", err)
 	}
 	return ioutil.WriteFile(l.path, rawMarkdown, DefaultMode)
+}
+
+// CoalesceDateName will turn a title and today's date into a unix friendly
+// name that can be used for file creation, and archiving.
+//
+// h/t @mrxinu
+func (l *LiveMD) CoalesceDateName() string {
+	now := time.Now()
+	formatted := now.Format("2006-01-02")
+	title := strings.ToLower(l.Title)
+	title = strings.ReplaceAll(title, " ", "_")
+	title = strings.ReplaceAll(title, ",", "")
+	title = strings.ReplaceAll(title, ".", "")
+	title = strings.ReplaceAll(title, "?", "")
+	title = strings.ReplaceAll(title, "!", "")
+	return formatted + "__" + title + ".md"
 }
 
 // Render will render the markdown and return the content

@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/kris-nova/livemd"
@@ -28,7 +29,8 @@ import (
 )
 
 const (
-	DefaultFile string = "live.md"
+	DefaultFile   string = "live.md"
+	DefaultOutput string = "archive"
 )
 
 var cfg = &AppOptions{}
@@ -36,6 +38,7 @@ var cfg = &AppOptions{}
 type AppOptions struct {
 	verbose  bool
 	filename string
+	output   string
 }
 
 var strm = &StreamOptions{}
@@ -148,19 +151,20 @@ Options
 				//
 				Name:        "stream",
 				Aliases:     []string{"s"},
-				Usage:       "Manage local live stream records.",
+				Usage:       "Manage local live stream state files.",
 				UsageText:   "live stream <title>",
-				Description: "Use this command to manage local records.",
+				Description: "Use this command to manage local state files.",
 				Subcommands: []*cli.Command{
 					{
 						Name:        "new",
 						Usage:       "Create a new local state file.",
-						UsageText:   "live stream new <title>",
+						UsageText:   "live stream new [options] <title>",
 						Description: "Use this to create a new state file.",
 						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
 						Action: func(c *cli.Context) error {
 							title := c.Args().Get(0)
 							if title == "" {
+								logrus.Errorf("Missing <title>.")
 								cli.ShowSubcommandHelp(c)
 								return nil
 							}
@@ -186,7 +190,7 @@ Options
 					{
 						Name:        "update",
 						Usage:       "Update fields in a local state file",
-						UsageText:   "live stream update {fields}",
+						UsageText:   "live stream update [options]",
 						Description: "Use this to update an existing state file.",
 						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
 						Action: func(c *cli.Context) error {
@@ -209,6 +213,39 @@ Options
 								l.Notify = strm.description
 							}
 							return l.Write()
+						},
+					},
+					{
+						Name:        "archive",
+						Usage:       "Archive a local state file",
+						UsageText:   "live stream archive [options]",
+						Description: "Use this to update archive a local state file.",
+						Flags: GlobalFlags([]cli.Flag{
+							&cli.StringFlag{
+								Name:        "output",
+								Aliases:     []string{"o"},
+								Destination: &cfg.output,
+								Value:       DefaultOutput,
+							},
+						}),
+						Action: func(c *cli.Context) error {
+
+							// Check if state file exists
+							if !FileExists(cfg.filename) {
+								return fmt.Errorf("file [%s] can not be found", cfg.filename)
+							}
+							l, err := livemd.Load(cfg.filename)
+							if err != nil {
+								return fmt.Errorf("file [%s] can not be loaded: %v", cfg.filename, err)
+							}
+							titleName := l.CoalesceDateName()
+							writeFile := filepath.Join(cfg.output, titleName)
+							logrus.Infof("Archiving state: %s", writeFile)
+
+							// By design this should NEVER l.Write()
+							// We can use the variables defined in l
+							// However we should NEVER mutate the source during an archive!
+							return MoveFile(cfg.filename, writeFile)
 						},
 					},
 				},
@@ -296,4 +333,9 @@ func FileExists(path string) bool {
 		return false
 	}
 	return true
+}
+
+// MoveFile is primarily used for Archiving.
+func MoveFile(src, dst string) error {
+	return os.Rename(src, dst)
 }
