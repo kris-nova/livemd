@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -36,22 +37,62 @@ const (
 	DefaultMode = 0644
 )
 
+type Link struct {
+	URL      *url.URL
+	Title    string
+	Markdown string
+}
+
 type LiveMD struct {
 	// path is the coupling to a local file on disk.
 	path string
+
+	// TwitchID is the twitch id for the VOD
+	//
+	// This MUST be set for every livemd as we couple this
+	// software to Twitch.
+	//
+	//https://www.twitch.tv/videos/{{id}}
+	//https://dashboard.twitch.tv/u/{{channel}}/content/video-producer/edit/{{id}}
+	TwitchID      string
+	TwitchChannel string
 
 	Title       string
 	Notify      string
 	Description string
 
 	// Subsystems
+	Links   []*Link
 	Twitter string
 }
 
-func New(path string) *LiveMD {
+func New(path, twitchChannel, twitchID string) *LiveMD {
 	return &LiveMD{
-		path: path,
+		path:          path,
+		TwitchID:      twitchID,
+		TwitchChannel: twitchChannel,
 	}
+}
+
+func (l *LiveMD) TwitchVideoPage() string {
+	return fmt.Sprintf("https://www.twitch.tv/videos/%s", l.TwitchID)
+}
+
+func (l *LiveMD) TwitchEditPage() string {
+	return fmt.Sprintf("https://dashboard.twitch.tv/u/%s/content/video-producer/edit/%s", l.TwitchChannel, l.TwitchID)
+}
+
+func (l *LiveMD) AddLink(title, rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return err
+	}
+	l.Links = append(l.Links, &Link{
+		URL:      u,
+		Title:    title,
+		Markdown: fmt.Sprintf("[%s](%s)", title, u.String()),
+	})
+	return nil
 }
 
 //// Write will first render the markdown, and write the result to the configured path
@@ -114,14 +155,15 @@ func (l *LiveMD) Render() ([]byte, error) {
 		return []byte(""), fmt.Errorf("unable to execute template: %v", err)
 	}
 	rawMarkdown = buf.Bytes()
-
 	// RecordV will record *l directly into rawMarkdown
 	return embedmd.RecordV(rawMarkdown, l)
 }
 
 // Load will attempt to load a *LiveMD from a path
 func Load(path string) (*LiveMD, error) {
-	x := New(path)
+	x := &LiveMD{
+		path: path,
+	}
 	data, err := x.Read()
 	if err != nil {
 		return nil, err

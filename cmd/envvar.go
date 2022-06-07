@@ -21,9 +21,11 @@ import (
 	"os"
 )
 
-type Auth struct {
+type Vars struct {
 	hackmdToken string
 	hackmdID    string
+
+	twitchChannel string
 
 	//discordToken   string
 	//discordChannel string
@@ -43,18 +45,24 @@ type Auth struct {
 }
 
 var (
-	auth     = &Auth{}
+	vars     = &Vars{}
 	registry = []*EnvVar{
 		{
 			Name:        "LIVE_HACKMD_TOKEN",
 			Value:       "",
-			Destination: &auth.hackmdToken,
+			Destination: &vars.hackmdToken,
 			Required:    true,
 		},
 		{
 			Name:        "LIVE_HACKMD_ID",
 			Value:       "",
-			Destination: &auth.hackmdID,
+			Destination: &vars.hackmdID,
+			Required:    true,
+		},
+		{
+			Name:        "LIVE_TWITCH_CHANNEL",
+			Value:       "",
+			Destination: &vars.twitchChannel,
 			Required:    true,
 		},
 	}

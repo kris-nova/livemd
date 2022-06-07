@@ -49,6 +49,7 @@ var strm = &StreamOptions{}
 type StreamOptions struct {
 	notify      string
 	description string
+	title       string
 }
 
 func main() {
@@ -100,46 +101,20 @@ Options
 		Usage:     "Centralized live streaming meta data in markdown.",
 		Commands: []*cli.Command{
 			{
-				Name:      "notification",
-				Aliases:   []string{"notif", "n", "notify"},
+				Name:      "notify",
+				Aliases:   []string{"notification", "n"},
 				Usage:     "Send notifications to configured backends.",
-				UsageText: "live notify <message>",
+				UsageText: "live notify",
 				Action: func(c *cli.Context) error {
-					//message := c.Args().Get(0)
-					//if message == "" {
-					//	fmt.Println(livemd.Banner())
-					//	cli.ShowSubcommandHelp(c)
-					//	return nil
-					//}
-					//notifier := notify.New(message)
-					//logrus.Infof("=== Starting Notification Bus ===")
-					//var err error
-					//if cfg.discordToken != "" {
-					//	err = notifier.EnableDiscord(cfg.discordToken, cfg.discordChannel)
-					//	if err != nil {
-					//		return fmt.Errorf("failed enabling discord: %v", err)
-					//	}
-					//}
-					//if cfg.twitterApiKeySecret != "" {
-					//	err = notifier.EnableTwitter(cfg.twitterAccessToken, cfg.twitterAccessTokenSecret, cfg.twitterApiKey, cfg.twitterApiKeySecret)
-					//	if err != nil {
-					//		return fmt.Errorf("failed enabling twitter: %v", err)
-					//	}
-					//}
+
+					// Load notification system
+					// Each notifier
+					//  - Do Notify()     // Send the notification
+					//  - Render Markdown // Return the pointer to the notification
 					//
-					//if cfg.mastodonUsername != "" {
-					//	err = notifier.EnableMastodon(cfg.mastodonServer, cfg.mastodonAccessToken, cfg.mastodonClientID, cfg.mastodonClientSecret, cfg.mastodonUsername, cfg.mastodonPassword)
-					//	if err != nil {
-					//		return fmt.Errorf("failed enabling mastodon: %v", err)
-					//	}
-					//}
-					//
-					//// Run the notifications system
-					//err = notifier.Notify()
-					//logrus.Infof("=== Stopping Notification Bus ===")
-					//if err != nil {
-					//	return err
-					//}
+					// Note: The notifiers should just return [link](https://...) strings
+					// Note: We have only ever used links in live streams in the past
+					// Note: We can easily have a link system in *LiveMD
 
 					return nil
 				},
@@ -171,18 +146,18 @@ Options
 							}
 
 							// Client
-							if auth.hackmdToken == "" {
+							if vars.hackmdToken == "" {
 								return fmt.Errorf("empty token")
 							}
-							if auth.hackmdID == "" {
+							if vars.hackmdID == "" {
 								return fmt.Errorf("empty hackmd id")
 							}
-							client := hackmd.New(auth.hackmdToken)
-							_, err = client.GetNote(auth.hackmdID)
+							client := hackmd.New(vars.hackmdToken)
+							_, err = client.GetNote(vars.hackmdID)
 							if err != nil {
-								return fmt.Errorf("unable to find note: %s: %v", auth.hackmdID, err)
+								return fmt.Errorf("unable to find note: %s: %v", vars.hackmdID, err)
 							}
-							note, err := livemd.ToNote(l, auth.hackmdID)
+							note, err := livemd.ToNote(l, vars.hackmdID)
 							if err != nil {
 								return fmt.Errorf("unable to translate to note: %v", err)
 							}
@@ -190,7 +165,7 @@ Options
 							if err != nil {
 								return err
 							}
-							logrus.Infof("Updated remote: https://hackmd.io/%s", auth.hackmdID)
+							logrus.Infof("Updated remote: https://hackmd.io/%s", vars.hackmdID)
 							return nil
 						},
 					},
@@ -202,16 +177,16 @@ Options
 						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
 						Action: func(c *cli.Context) error {
 							// Client
-							if auth.hackmdToken == "" {
+							if vars.hackmdToken == "" {
 								return fmt.Errorf("empty token")
 							}
-							if auth.hackmdID == "" {
+							if vars.hackmdID == "" {
 								return fmt.Errorf("empty hackmd id")
 							}
-							client := hackmd.New(auth.hackmdToken)
-							note, err := client.GetNote(auth.hackmdID)
+							client := hackmd.New(vars.hackmdToken)
+							note, err := client.GetNote(vars.hackmdID)
 							if err != nil {
-								return fmt.Errorf("unable to find note: %s: %v", auth.hackmdID, err)
+								return fmt.Errorf("unable to find note: %s: %v", vars.hackmdID, err)
 							}
 							err = ioutil.WriteFile(cfg.filename, []byte(note.Content), livemd.DefaultMode)
 							if err != nil {
@@ -240,13 +215,13 @@ Options
 					{
 						Name:        "new",
 						Usage:       "Create a new local state file.",
-						UsageText:   "live stream new [options] <title>",
+						UsageText:   "live stream new [options] <twitch-id>",
 						Description: "Use this to create a new state file.",
 						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
 						Action: func(c *cli.Context) error {
-							title := c.Args().Get(0)
-							if title == "" {
-								logrus.Errorf("Missing <title>.")
+							twitchID := c.Args().Get(0)
+							if twitchID == "" {
+								logrus.Errorf("Missing <twitch-id>.")
 								cli.ShowSubcommandHelp(c)
 								return nil
 							}
@@ -256,8 +231,7 @@ Options
 								return fmt.Errorf("file [%s] exists", cfg.filename)
 							}
 							logrus.Infof("Creating new state: %s", cfg.filename)
-							l := livemd.New(cfg.filename)
-							l.Title = title
+							l := livemd.New(cfg.filename, vars.twitchChannel, twitchID)
 							if strm.notify != "" {
 								logrus.Infof("Setting notification string: %s", strm.notify)
 								l.Notify = strm.notify
@@ -266,6 +240,13 @@ Options
 								logrus.Infof("Setting description string: %s", strm.notify)
 								l.Notify = strm.description
 							}
+
+							logrus.Infof("Twitch Edit Dashboard: ")
+							logrus.Infof(l.TwitchEditPage())
+
+							logrus.Infof("Twitch Vidoe Page: ")
+							logrus.Infof(l.TwitchVideoPage())
+
 							return l.Write()
 						},
 					},
@@ -276,6 +257,9 @@ Options
 						Description: "Use this to update an existing state file.",
 						Flags:       GlobalFlags(StreamFlags([]cli.Flag{})),
 						Action: func(c *cli.Context) error {
+
+							// Todo use git to reconcile or something, IDK
+							logrus.Warningf("Update will lose any remote information that is not templated!")
 
 							// Check if state file exists
 							if !livemd.FileExists(cfg.filename) {
@@ -293,6 +277,10 @@ Options
 							if strm.description != "" {
 								logrus.Infof("Setting description string: %s", strm.description)
 								l.Description = strm.description
+							}
+							if strm.title != "" {
+								logrus.Infof("Setting title string: %s", strm.title)
+								l.Title = strm.title
 							}
 							logrus.Infof("Updating markdown. Rendering.")
 							return l.Write()
@@ -329,6 +317,43 @@ Options
 							// We can use the variables defined in l
 							// However we should NEVER mutate the source during an archive!
 							return livemd.MoveFile(cfg.filename, writeFile)
+						},
+					},
+					{
+						Name:        "link",
+						Usage:       "Add a link to the local state file.",
+						UsageText:   "live stream link <title> <url>",
+						Description: "Use this to add a link to the local state file.",
+						Flags:       GlobalFlags([]cli.Flag{}),
+						Action: func(c *cli.Context) error {
+
+							title := c.Args().Get(0)
+							if title == "" {
+								logrus.Errorf("Missing <title>.")
+								cli.ShowSubcommandHelp(c)
+								return nil
+							}
+							rawURL := c.Args().Get(1)
+							if rawURL == "" {
+								logrus.Errorf("Missing <url>.")
+								cli.ShowSubcommandHelp(c)
+								return nil
+							}
+
+							// Check if state file exists
+							if !livemd.FileExists(cfg.filename) {
+								return fmt.Errorf("file [%s] can not be found", cfg.filename)
+							}
+							l, err := livemd.Load(cfg.filename)
+							if err != nil {
+								return fmt.Errorf("file [%s] can not be loaded: %v", cfg.filename, err)
+							}
+							err = l.AddLink(title, rawURL)
+							if err != nil {
+								return fmt.Errorf("unable to add link: %v", err)
+							}
+							logrus.Infof("Saving: %s", cfg.filename)
+							return l.Write()
 						},
 					},
 				},
@@ -381,6 +406,12 @@ func StreamFlags(c []cli.Flag) []cli.Flag {
 			Name:        "description",
 			Aliases:     []string{"d"},
 			Destination: &strm.description,
+			Value:       "",
+		},
+		&cli.StringFlag{
+			Name:        "title",
+			Aliases:     []string{"t"},
+			Destination: &strm.title,
 			Value:       "",
 		},
 	}

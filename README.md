@@ -16,7 +16,32 @@ Current supported integrations:
 
 # Workflow
 
-Use `livemd` as your main source of live streaming state.
+Use `livemd` as your main source of livestreaming state.
+
+### Acquire Twitch ID
+
+Go to the [VODs page](https://dashboard.twitch.tv/u/krisnova/content/video-producer) for your channel.
+
+```
+https://dashboard.twitch.tv/u/{{channel}}/content/video-producer
+```
+
+Find the most recent highlighter link, and pull the ID from the link.
+
+```
+https://dashboard.twitch.tv/u/{{channel}}/content/video-producer/highlighter/{{id}}
+```
+
+Now you can build the following URLs for your live stream. 
+
+``` 
+# Video URL for the specific video
+https://www.twitch.tv/videos/{{id}}
+
+# Edit page for the specific video
+https://dashboard.twitch.tv/u/krisnova/content/video-producer/edit/{{id}}
+```
+
 
 ### Create a new stream.
 
@@ -37,7 +62,18 @@ The `notify` string is a 280 character string that is used to notify various ser
 live stream update --notify "Had a rough night. Come watch me live. Exclusively on @Twitch. https://twitch.tv/krisnova"
 ```
 
-The `description` string
+The `description` string is used to populate the YouTube video description, as well as the archive webpage. 
+
+``` 
+live stream update --notify "Had a rough night. Come watch me live. Exclusively on @Twitch. https://twitch.tv/krisnova" --description "You should never run this code, ever!"
+```
+
+### Go Live Notifications 
+
+```
+
+```
+
 
 
 
